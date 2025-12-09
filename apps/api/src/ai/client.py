@@ -1,18 +1,21 @@
-"""AI client for Claude API."""
+"""AI client for Aliyun Bailian (DashScope) API."""
 
-from anthropic import Anthropic
+from openai import OpenAI
 
 from ..config import settings
 
 # Lazy initialization
-_client: Anthropic | None = None
+_client: OpenAI | None = None
 
 
-def get_client() -> Anthropic:
-    """Get or create Anthropic client."""
+def get_client() -> OpenAI:
+    """Get or create OpenAI-compatible client for DashScope."""
     global _client
     if _client is None:
-        _client = Anthropic(api_key=settings.anthropic_api_key)
+        _client = OpenAI(
+            api_key=settings.dashscope_api_key,
+            base_url=settings.dashscope_base_url,
+        )
     return _client
 
 
@@ -22,20 +25,22 @@ async def chat(
     max_tokens: int = 4096,
     temperature: float = 0.7,
 ) -> str:
-    """Send a chat message to Claude."""
+    """Send a chat message to Qwen model."""
     client = get_client()
 
-    messages = [{"role": "user", "content": prompt}]
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
 
-    response = client.messages.create(
-        model=settings.claude_model,
+    response = client.chat.completions.create(
+        model=settings.chat_model,
         max_tokens=max_tokens,
-        system=system if system else None,
         messages=messages,
         temperature=temperature,
     )
 
-    return response.content[0].text
+    return response.choices[0].message.content
 
 
 async def chat_json(

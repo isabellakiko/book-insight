@@ -18,7 +18,8 @@ CHARACTER_EXTRACTION_PROMPT = """分析以下小说片段，提取所有出现�
             "name": "人物姓名",
             "aliases": ["别名/外号列表"],
             "description": "人物简介（50-100字）",
-            "role": "角色定位：protagonist/antagonist/supporting/minor"
+            "role": "角色定位：protagonist/antagonist/supporting/minor",
+            "first_chapter": "该人物首次出现的章节标题（如：第一章 xxx）"
         }}
     ]
 }}
@@ -27,6 +28,7 @@ CHARACTER_EXTRACTION_PROMPT = """分析以下小说片段，提取所有出现�
 1. 只提取明确出现的人物，不要推测
 2. 同一人物的不同称呼应合并
 3. 简要描述人物特点
+4. first_chapter 必须是上面内容中实际出现的章节标题
 """
 
 
@@ -57,6 +59,12 @@ class CharacterExtractor:
                 if 0 <= i < len(book.chapters)
             ))
 
+        # Build chapter title to index mapping
+        chapter_title_to_index = {}
+        for idx in sample_chapters:
+            chapter = book.chapters[idx]
+            chapter_title_to_index[chapter.title] = idx
+
         # Extract content from sample chapters
         sample_content = ""
         for idx in sample_chapters:
@@ -80,13 +88,23 @@ class CharacterExtractor:
 
         characters = []
         for char_data in result.get("characters", []):
+            # Find first appearance chapter index
+            first_chapter_title = char_data.get("first_chapter", "")
+            first_appearance = 0
+
+            # Try to match chapter title
+            for title, idx in chapter_title_to_index.items():
+                if first_chapter_title and (first_chapter_title in title or title in first_chapter_title):
+                    first_appearance = idx
+                    break
+
             characters.append(Character(
                 id=str(uuid.uuid4())[:8],
                 name=char_data.get("name", ""),
                 aliases=char_data.get("aliases", []),
                 description=char_data.get("description", ""),
                 role=char_data.get("role", "minor"),
-                first_appearance=sample_chapters[0] if sample_chapters else 0,
+                first_appearance=first_appearance,
             ))
 
         return characters

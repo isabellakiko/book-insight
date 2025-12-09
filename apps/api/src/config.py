@@ -7,11 +7,11 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings."""
 
-    # AI
-    anthropic_api_key: str = ""
-    openai_api_key: str = ""
-    claude_model: str = "claude-sonnet-4-20250514"
-    embedding_model: str = "text-embedding-3-small"
+    # AI - 阿里云百炼
+    dashscope_api_key: str = ""
+    dashscope_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    chat_model: str = "qwen-plus"
+    embedding_model: str = "text-embedding-v3"
 
     # Server
     api_host: str = "0.0.0.0"

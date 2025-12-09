@@ -3,7 +3,7 @@
 > 本周/本月开发进度记录 - AI 了解最近完成了什么
 
 **本周时间**: 2025-12-09 - 2025-12-15（第 50 周）
-**最后更新**: 2025-12-09 10:15
+**最后更新**: 2025-12-09 12:14
 **当前阶段**: MVP 开发
 
 ---
@@ -19,6 +19,8 @@
 
 **本周完成**：
 - ✅ AI 协作文档系统初始化
+- ✅ 阿里云百炼 API 适配
+- ✅ 人物提取功能修复
 
 ---
 
@@ -41,11 +43,42 @@
 
 ---
 
+### Day 2 - 2025-12-09（周二）⭐ 阿里云百炼适配 + 功能联调
+
+**核心任务**: 将 AI 服务从 Claude/OpenAI 切换到阿里云百炼，完成功能测试
+
+**完成工作**：
+- ✅ 修复 pnpm workspace 过滤器 (`web` → `book-insight-web`)
+- ✅ 适配阿里云百炼 API（OpenAI 兼容模式）
+  - 修改 `config.py`：dashscope_api_key + dashscope_base_url
+  - 修改 `ai/client.py`：Anthropic SDK → OpenAI SDK
+  - 修改 `rag/store.py`：Embeddings 使用百炼 API
+  - 更新 `.env.example`：百炼配置模板
+- ✅ 测试章节分析 - 成功
+- ✅ 测试人物提取 - 成功
+- ✅ 修复人物 first_appearance bug（之前全部返回第一章）
+
+**技术亮点**：
+- 百炼 OpenAI 兼容模式：`https://dashscope.aliyuncs.com/compatible-mode/v1`
+- 模型配置：`qwen-plus`（对话）+ `text-embedding-v3`（向量）
+- 人物提取改进：AI 返回章节标题 → 映射回章节索引
+
+**遇到的问题**：
+- **问题**: 人物 first_appearance 全部显示第一章
+- **原因**: 代码硬编码 `first_appearance=sample_chapters[0]`
+- **解决**: 让 AI 返回 first_chapter 标题，再映射到实际索引
+
+**待讨论**：
+- 人物提取架构优化：规则预提取 vs AI 采样分析
+
+---
+
 ## 本周任务
 
 ### P0（Critical）
-- [ ] 测试后端 API 端点
+- [x] 测试后端 API 端点（章节分析、人物提取）
 - [ ] 测试 RAG 问答功能
+- [ ] 优化人物提取架构（规则预提取 vs AI 采样）
 
 ### P1（High）
 - [ ] 优化前端 UI 样式
@@ -85,6 +118,15 @@
 ### 问题 1: Python 虚拟环境启动
 - **现象**: 需要手动激活 venv 才能启动后端
 - **解决方案**: package.json 直接调用 `.venv/bin/uvicorn`
+
+### 问题 2: pnpm 过滤器名称错误
+- **现象**: `pnpm --filter web dev` 找不到项目
+- **解决方案**: 改为 `pnpm --filter book-insight-web dev`
+
+### 问题 3: 人物提取章节全部显示第一章
+- **现象**: 所有人物 first_appearance 都是 0
+- **原因**: 代码硬编码为 sample_chapters[0]
+- **解决方案**: AI 返回章节标题，再映射到实际索引
 
 ---
 
