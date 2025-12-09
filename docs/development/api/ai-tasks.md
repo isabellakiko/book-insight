@@ -149,6 +149,122 @@ result = await extractor.extract(
 
 ---
 
+## 人物按需分析（character_analyzer.py）
+
+### 功能
+按需分析单个人物，支持三种模式：
+- **快速搜索**：纯文本正则搜索，<100ms
+- **完整分析**：AI 分析，1-5秒/人物
+- **流式分析**：SSE 事件流，支持前端实时进度
+
+### CharacterOnDemandAnalyzer 类
+
+#### 1. 快速搜索
+```python
+result = analyzer.search(book, character_name)
+# 返回 CharacterSearchResult
+```
+- 使用正则表达式搜索人物出现的所有章节
+- 统计提及次数
+- 不调用 AI，速度极快
+
+#### 2. 完整同步分析
+```python
+result = await analyzer.analyze_full(book, character_name, max_chapters=30)
+# 返回 DetailedCharacter
+```
+
+#### 3. 流式异步分析（推荐）
+```python
+async for event in analyzer.analyze_stream(book, character_name):
+    # event: {"event": "xxx", "data": {...}}
+```
+
+### 分析流程
+```
+搜索人物出现章节
+    ↓
+限制分析章节数（默认30章）
+    ↓
+逐章分析人物出现（事件、互动、台词）
+    ↓
+分析人物关系（最多5个关键关系）
+    ↓
+分析性格特点（描述、性格词、角色类型）
+    ↓
+返回完整 DetailedCharacter
+```
+
+### SSE 事件类型
+
+| 事件名 | 数据结构 | 说明 |
+|--------|----------|------|
+| `search_complete` | `CharacterSearchResult` | 搜索完成 |
+| `chapter_analyzed` | `{chapter_index, appearance}` | 单章分析完成 |
+| `chapter_error` | `{chapter_index, error}` | 单章分析出错 |
+| `relations_analyzed` | `{relations}` | 关系分析完成 |
+| `completed` | `DetailedCharacter` | 全部完成 |
+
+### 内容限制
+- 章节分析：内容 >15,000 字符时截断
+- 关系分析：最多处理 30 条互动记录
+- 返回关系：最多 5 个关键关系
+
+### Prompt 模板
+
+#### 章节出现分析
+```
+分析人物 "{name}" 在以下章节中的表现：
+
+章节标题：{title}
+章节内容：
+{content}
+
+返回 JSON 格式：
+{
+    "events": ["该人物在本章的主要事件，最多3个"],
+    "interactions": ["与其他角色的互动，最多3个"],
+    "quote": "代表性台词或描述（可为空）"
+}
+```
+
+#### 关系分析
+```
+基于以下人物互动记录，分析 "{name}" 的人物关系：
+
+{interactions_text}
+
+返回 JSON 格式：
+{
+    "relations": [
+        {
+            "target_name": "关系对象",
+            "relation_type": "friend/enemy/lover/family/mentor/rival",
+            "description": "关系描述",
+            "evidence_chapters": [章节索引列表]
+        }
+    ]
+}
+
+最多返回5个最重要的关系。
+```
+
+#### 性格分析
+```
+基于以下人物表现，分析 "{name}" 的性格特点：
+
+{appearances_text}
+
+返回 JSON 格式：
+{
+    "description": "人物简介（100-200字）",
+    "personality": ["性格特点列表，3-5个词"],
+    "role": "protagonist/antagonist/supporting/minor"
+}
+```
+
+---
+
 ## 相关模块
 
 - **RAG 系统**: `apps/api/src/rag/` - 向量检索与问答

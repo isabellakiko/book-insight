@@ -38,6 +38,27 @@ data/
 
 ---
 
+## 章节检测支持格式
+
+章节检测使用正则表达式匹配，支持以下格式：
+
+| 格式 | 示例 | 正则模式 |
+|------|------|----------|
+| 阿拉伯数字+章 | 第1章、第123章 | `^第[0-9]+[章掌][：:\s]?.*` |
+| 中文数字+章 | 第一章、第一百二十三章 | `^第[零一二三四五六七八九十百千万两份]+[章掌][：:\s]?.*` |
+| 阿拉伯数字无章 | 第123 标题 | `^第[0-9]+\s+\S+` |
+| 中文数字无章 | 第一百二十三 标题 | `^第[零一二三四五六七八九十百千万两份]+\s+\S+` |
+| 英文格式 | Chapter 123 | `^Chapter\s+\d+[：:\s]?.*` |
+
+**支持的中文数字字符**：
+- 标准：零、一、二、三、四、五、六、七、八、九、十、百、千、万
+- 扩展：两（如"第两千章"）、份（"千"的常见错别字）
+
+**错别字处理**：
+- `掌` → 等同于 `章`（常见打字错误）
+
+---
+
 ## Book ID 生成规则
 
 ```python
@@ -276,8 +297,63 @@ BookManager.save_detailed_character(book_id, detailed_character)
 
 ---
 
+## 向量存储（vector_store/）
+
+### ChromaDB 配置
+
+向量存储使用 ChromaDB，持久化到 `data/vector_store/{book_id}/` 目录。
+
+**Embedding 模型**：
+```python
+# 阿里云百炼 text-embedding-v3
+embeddings = OpenAIEmbeddings(
+    model="text-embedding-v3",
+    openai_api_key=settings.dashscope_api_key,
+    openai_api_base=settings.dashscope_base_url,
+)
+```
+
+### 文本分割策略
+
+```python
+# 分隔符优先级（从高到低）
+separators = ["\n\n", "\n", "。", "！", "？", ".", "!", "?", " "]
+
+# 默认参数
+chunk_size = 500      # 每块字符数
+chunk_overlap = 100   # 重叠字符数
+```
+
+### 向量元数据结构
+
+每个文本块存储以下元数据：
+```json
+{
+    "chapter_index": 0,
+    "chapter_title": "第一章",
+    "chunk_index": 0
+}
+```
+
+### 批处理配置
+
+- 批大小：100（每批嵌入和添加 100 个块）
+- 索引时按章节顺序处理，每章完成后立即写入
+
+### API 方法
+
+| 方法 | 功能 | 说明 |
+|------|------|------|
+| `is_indexed()` | 检查是否已索引 | 查询集合是否存在且非空 |
+| `index(book, chunk_size, chunk_overlap)` | 索引书籍 | 按章节拆分，再按块拆分 |
+| `query(query, top_k)` | 语义搜索 | 返回相似度最高的 K 个块 |
+
+---
+
 ## 相关文件
 
 - **核心模块**: `apps/api/src/core/book.py`
 - **数据模型**: `apps/api/src/knowledge/models.py`
+- **向量存储**: `apps/api/src/rag/store.py`
+- **RAG 检索**: `apps/api/src/rag/retriever.py`
 - **配置文件**: `apps/api/src/config.py`

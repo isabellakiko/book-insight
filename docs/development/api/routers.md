@@ -201,29 +201,120 @@
 }
 ```
 
-### POST /api/analysis/{book_id}/characters/extract
-**描述**: 提取书籍人物（AI 驱动）
+### POST /api/analysis/{book_id}/characters/search
+**描述**: 快速搜索人物出现的章节（纯文本搜索，不调用 AI）
 
-**请求体**（可选）:
+**请求体**:
 ```json
 {
-  "sample_chapters": [0, 5, 10]
+  "name": "张成"
 }
 ```
 
 **响应**:
 ```json
 {
-  "characters": [
+  "name": "张成",
+  "found_in_chapters": [0, 1, 5, 10],
+  "chapter_titles": ["第一章", "第二章", "第六章", "第十一章"],
+  "total_mentions": 156
+}
+```
+
+### POST /api/analysis/{book_id}/characters/analyze
+**描述**: 完整分析单个人物（同步，可能耗时较长）
+
+**请求体**:
+```json
+{
+  "name": "张成",
+  "max_chapters": 30
+}
+```
+
+**响应**: `DetailedCharacter` 对象（见下方）
+
+### GET /api/analysis/{book_id}/characters/stream
+**描述**: 流式分析人物（SSE，推荐用于前端）
+
+**查询参数**:
+| 参数 | 类型 | 描述 |
+|------|------|------|
+| name | string | 人物名称 |
+
+**响应**: Server-Sent Events (SSE) 流
+
+**事件类型**:
+
+| 事件名 | 数据结构 | 说明 |
+|--------|----------|------|
+| `search_complete` | `CharacterSearchResult` | 搜索完成 |
+| `chapter_analyzed` | `{chapter_index, appearance}` | 单章分析完成 |
+| `chapter_error` | `{chapter_index, error}` | 单章分析出错 |
+| `relations_analyzed` | `{relations}` | 关系分析完成 |
+| `completed` | `DetailedCharacter` | 全部完成 |
+
+**前端使用示例**:
+```javascript
+const eventSource = new EventSource(
+  `/api/analysis/${bookId}/characters/stream?name=${encodeURIComponent(name)}`
+);
+
+eventSource.addEventListener('search_complete', (e) => {
+  const data = JSON.parse(e.data);
+  console.log('搜索完成:', data.total_mentions, '次提及');
+});
+
+eventSource.addEventListener('chapter_analyzed', (e) => {
+  const data = JSON.parse(e.data);
+  console.log('分析章节:', data.chapter_index);
+});
+
+eventSource.addEventListener('completed', (e) => {
+  const character = JSON.parse(e.data);
+  console.log('分析完成:', character);
+  eventSource.close();
+});
+```
+
+### GET /api/analysis/{book_id}/characters/detailed
+**描述**: 列出所有已分析的人物
+
+**响应**: `list[DetailedCharacter]`
+
+### GET /api/analysis/{book_id}/characters/detailed/{character_name}
+**描述**: 获取已分析的人物详情
+
+**响应**:
+```json
+{
+  "name": "张成",
+  "aliases": ["小成", "成哥"],
+  "description": "主角，重生者...",
+  "role": "protagonist",
+  "personality": ["坚毅", "果断", "重情义"],
+  "appearances": [
     {
-      "id": "string",
-      "name": "string",
-      "aliases": ["string"],
-      "description": "string",
-      "role": "protagonist|antagonist|supporting|minor",
-      "first_appearance": 0
+      "chapter_index": 0,
+      "chapter_title": "第一章",
+      "events": ["重生回到高中"],
+      "interactions": ["与李明相遇"],
+      "quote": "这一世，我绝不会再让悲剧重演。"
     }
-  ]
+  ],
+  "first_appearance": 0,
+  "total_chapters": 1112,
+  "relations": [
+    {
+      "target_name": "李明",
+      "relation_type": "friend",
+      "description": "高中同学，生死之交",
+      "evidence_chapters": [0, 5, 10]
+    }
+  ],
+  "analysis_status": "completed",
+  "analyzed_chapters": [0, 100, 500],
+  "error_message": ""
 }
 ```
 
