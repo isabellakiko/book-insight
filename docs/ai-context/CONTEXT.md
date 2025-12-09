@@ -2,7 +2,7 @@
 
 > AI 协作记忆文件 - 快速恢复项目上下文，立即开始工作
 
-**最后更新**: 2025-12-09 10:30
+**最后更新**: 2025-12-09 12:45
 **项目阶段**: MVP 开发
 **当前状态**: 核心功能已完成，待测试优化
 
@@ -12,7 +12,7 @@
 
 **项目名称**: Book Insight
 **项目性质**: 个人 AI 书籍深度分析工具
-**技术栈**: React 18 + FastAPI + ChromaDB + Claude API
+**技术栈**: React 18 + FastAPI + 阿里云百炼(qwen-plus)
 **核心特点**:
 - RAG 问答：基于原文的智能问答
 - 人物分析：自动提取人物、关系、性格
@@ -75,8 +75,8 @@
 |------|------|
 | **FastAPI** (非 Spring Boot) | AI/ML 项目用 Python 生态更方便，LangChain、ChromaDB 都是 Python 原生 |
 | **ChromaDB** (非 Pinecone) | 本地部署，无需云服务，数据隐私 |
-| **Claude API** | claude-sonnet-4-20250514，长上下文能力强 |
-| **OpenAI Embeddings** | text-embedding-3-small 性价比高，效果稳定 |
+| **阿里云百炼** | qwen-plus 模型，OpenAI 兼容接口，国内访问稳定 |
+| **百炼 Embeddings** | text-embedding-v3，配合 qwen 使用 |
 | **React + Vite** | 快速开发，热更新体验好 |
 | **Zustand** (非 Redux) | 轻量，适合小型项目 |
 
@@ -85,7 +85,7 @@
 1. **仅支持 TXT** - 暂不支持 EPUB、PDF
 2. **章节检测依赖格式** - 需要标准的"第X章"格式
 3. **单机运行** - 无多用户支持
-4. **API 成本** - Claude + OpenAI 调用有费用
+4. **API 成本** - 百炼 API 调用有费用
 
 ---
 
@@ -123,7 +123,7 @@
 ### 后端（apps/api/）
 - **框架**: FastAPI
 - **语言**: Python 3.11+
-- **AI**: Anthropic Claude (claude-sonnet-4-20250514) + OpenAI Embeddings (text-embedding-3-small)
+- **AI**: 阿里云百炼 (qwen-plus) + 百炼 Embeddings (text-embedding-v3)
 - **RAG**: LangChain + ChromaDB
 - **数据存储**: JSON 文件 + ChromaDB 向量库
 - **虚拟环境**: .venv（使用 pip）
@@ -158,9 +158,19 @@ book-insight/
 │           ├── knowledge/    # 知识模型
 │           └── core/         # 核心逻辑
 ├── data/
-│   ├── books/                # 书籍文件存储
-│   ├── analysis/             # 分析结果缓存
-│   └── vector_store/         # ChromaDB 向量数据库
+│   ├── books/                # 书籍原始文件 (.txt)
+│   │   └── {book_id}/
+│   │       ├── meta.json     # 书籍元信息
+│   │       └── chapters/     # 章节独立存储
+│   │           ├── 0001.json
+│   │           └── ...
+│   ├── analysis/             # 分析结果
+│   │   └── {book_id}/
+│   │       └── characters/   # 人物分析（分层存储）
+│   │           └── {name}/
+│   │               ├── profile.json
+│   │               └── appearances/
+│   └── vector_store/         # ChromaDB（暂缓）
 └── docs/
     ├── ai-context/           # AI 协作文档
     └── development/          # 开发文档

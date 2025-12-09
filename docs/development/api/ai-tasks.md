@@ -12,11 +12,12 @@
 ```
 apps/api/src/ai/
 ├── __init__.py
-├── client.py          # AI 客户端（Claude API）
+├── client.py          # AI 客户端（阿里云百炼）
 └── tasks/
     ├── __init__.py
     ├── chapter.py     # 章节分析任务
     └── character.py   # 人物提取任务
+    └── character_analyzer.py  # 人物按需分析（SSE）
 ```
 
 ---
@@ -24,26 +25,25 @@ apps/api/src/ai/
 ## AI 客户端（client.py）
 
 ### 职责
-- 封装 Anthropic Claude API 调用
+- 封装阿里云百炼 API 调用（OpenAI SDK 兼容模式）
 - 统一处理 API 配置和错误
 - 支持标准对话和 JSON 响应两种模式
 
 ### 主要功能
 ```python
-from src.ai.client import AIClient
-
-client = AIClient()
+from src.ai.client import chat, chat_json
 
 # 标准对话
-response = await client.chat(prompt="问题", system="系统提示")
+response = await chat(prompt="问题", system="系统提示")
 
 # JSON 响应（自动解析）
-data = await client.chat_json(prompt="问题", system="系统提示")
+data = await chat_json(prompt="问题", system="系统提示")
 ```
 
 ### 配置
-- 环境变量: `ANTHROPIC_API_KEY`
-- 模型: `claude-sonnet-4-20250514`（可通过 `CLAUDE_MODEL` 环境变量配置）
+- 环境变量: `DASHSCOPE_API_KEY`
+- Base URL: `https://dashscope.aliyuncs.com/compatible-mode/v1`
+- 模型: `qwen-plus`（可通过 `CHAT_MODEL` 环境变量配置）
 - 默认参数:
   - max_tokens: 4096
   - temperature: 0.3（JSON 模式）/ 0.7（普通对话）

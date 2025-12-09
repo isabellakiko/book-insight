@@ -25,7 +25,7 @@ AI 驱动的个人书籍深度分析工具。
 
 - **前端**：React 18 + Vite + TailwindCSS + TanStack Query
 - **后端**：Python FastAPI + LangChain + ChromaDB
-- **AI**：Claude API + OpenAI Embeddings
+- **AI**：阿里云百炼 (qwen-plus) + text-embedding-v3
 
 ## 快速开始
 
@@ -40,7 +40,7 @@ pnpm setup
 
 ```bash
 cp apps/api/.env.example apps/api/.env
-# 编辑 .env 填入 ANTHROPIC_API_KEY 和 OPENAI_API_KEY
+# 编辑 .env 填入 DASHSCOPE_API_KEY
 ```
 
 ### 3. 启动开发服务器
@@ -105,13 +105,13 @@ book-insight/
 1. 仅支持 TXT 格式（暂不支持 EPUB、PDF）
 2. 章节检测依赖标准格式（如"第一章"）
 3. 单机运行，无多用户支持
-4. API 调用有成本（Claude + OpenAI）
+4. API 调用有成本（阿里云百炼）
 
 ## 环境变量
 
 | 变量 | 必需 | 说明 |
 |------|------|------|
-| `ANTHROPIC_API_KEY` | 是 | Claude API 密钥 |
-| `OPENAI_API_KEY` | 是 | OpenAI 密钥（用于 Embeddings） |
-| `CLAUDE_MODEL` | 否 | 默认 claude-sonnet-4-20250514 |
-| `EMBEDDING_MODEL` | 否 | 默认 text-embedding-3-small |
+| `DASHSCOPE_API_KEY` | 是 | 阿里云百炼 API 密钥 |
+| `DASHSCOPE_BASE_URL` | 否 | 默认 https://dashscope.aliyuncs.com/compatible-mode/v1 |
+| `CHAT_MODEL` | 否 | 默认 qwen-plus |
+| `EMBEDDING_MODEL` | 否 | 默认 text-embedding-v3 |
