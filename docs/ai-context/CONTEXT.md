@@ -147,7 +147,7 @@ book-insight/
 ├── apps/
 │   ├── web/                  # React 前端
 │   │   └── src/
-│   │       ├── pages/        # 5 个页面组件
+│   │       ├── pages/        # 6 个页面组件
 │   │       ├── stores/       # Zustand 状态
 │   │       └── services/     # API 调用
 │   └── api/                  # Python 后端
@@ -185,10 +185,14 @@ book-insight/
 | Books | `GET /api/books` | 列出所有书籍 |
 | Books | `POST /api/books/upload` | 上传书籍 |
 | Books | `GET /api/books/{id}/chapters` | 获取章节列表 |
+| Books | `DELETE /api/books/{id}` | 删除书籍 |
 | Analysis | `POST /api/analysis/{book_id}/chapters/{index}` | 分析单章 |
-| Analysis | `POST /api/analysis/{book_id}/characters/extract` | 提取人物 |
+| Analysis | `POST /api/analysis/{book_id}/batch` | 批量分析章节 |
+| Analysis | `POST /api/analysis/{book_id}/characters/search` | 搜索人物出现章节 |
+| Analysis | `GET /api/analysis/{book_id}/characters/stream` | 流式分析人物（SSE） |
 | RAG | `POST /api/rag/{book_id}/index` | 创建向量索引 |
-| RAG | `POST /api/rag/{book_id}/ask` | 智能问答 |
+| RAG | `GET /api/rag/{book_id}/status` | 索引状态 |
+| RAG | `POST /api/rag/{book_id}/ask` | RAG 智能问答 |
 
 ---
 
@@ -217,10 +221,7 @@ type: feat | fix | docs | refactor | perf | test | chore
 ## 快速导航
 
 - [当前进度](CURRENT.md)
-- [API 路由](../development/api/routers.md)
-- [数据存储](../development/api/data-storage.md)
-- [数据模型](../development/api/models.md)
-- [AI 任务](../development/api/ai-tasks.md)
+- [API 文档](../development/api/routers.md)
 - [页面文档](../development/web/pages.md)
 
 ---

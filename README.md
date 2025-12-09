@@ -84,15 +84,23 @@ book-insight/
 ### 书籍管理
 - `GET /api/books` - 列出所有书籍
 - `POST /api/books/upload` - 上传书籍
-- `GET /api/books/{id}/chapters` - 获取章节列表
+- `GET /api/books/{book_id}` - 获取书籍详情
+- `GET /api/books/{book_id}/chapters` - 获取章节列表
+- `GET /api/books/{book_id}/chapters/{index}/content` - 获取章节内容
+- `DELETE /api/books/{book_id}` - 删除书籍
 
 ### 分析
 - `POST /api/analysis/{book_id}/chapters/{index}` - 分析单章
-- `POST /api/analysis/{book_id}/characters/extract` - 提取人物
+- `POST /api/analysis/{book_id}/batch` - 批量分析章节
+- `POST /api/analysis/{book_id}/characters/search` - 搜索人物出现章节
+- `GET /api/analysis/{book_id}/characters/stream` - 流式分析人物（SSE）
+- `GET /api/analysis/{book_id}/characters/detailed` - 获取已分析人物列表
 
 ### RAG
-- `POST /api/rag/{book_id}/index` - 创建索引
-- `POST /api/rag/{book_id}/ask` - 智能问答
+- `POST /api/rag/{book_id}/index` - 创建向量索引
+- `GET /api/rag/{book_id}/status` - 查看索引状态
+- `POST /api/rag/{book_id}/query` - 向量检索
+- `POST /api/rag/{book_id}/ask` - RAG 智能问答
 
 ## 支持格式
 

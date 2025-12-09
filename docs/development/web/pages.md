@@ -14,7 +14,8 @@
 |------|------|------|------|
 | Dashboard | `Dashboard.jsx` | `/` | 首页，书籍管理 |
 | RAG Chat | `RAGChat.jsx` | `/chat` | 智能问答 |
-| Characters | `Characters.jsx` | `/characters` | 人物图谱 |
+| Characters | `Characters.jsx` | `/characters` | 人物列表 |
+| Character Detail | `CharacterDetail.jsx` | `/characters/:name` | 人物详情（全屏） |
 | Timeline | `Timeline.jsx` | `/timeline` | 情节时间线 |
 | Chapter Analysis | `ChapterAnalysis.jsx` | `/chapters/:bookId` | 章节分析 |
 
@@ -64,13 +65,12 @@ function RAGChat() {
 
 ---
 
-## Characters（人物图谱）
+## Characters（人物列表）
 
 ### 功能
-- 展示书籍中的人物
-- 人物卡片（名字、别名、角色类型、描述、首次出场章节）
-- 人物提取按钮（触发 AI 分析）
-- 角色分类：主角、反派、配角、次要
+- 显示已分析的人物卡片列表
+- 搜索框输入人物名字触发分析
+- 点击人物卡片在新标签页打开详情
 
 ### 依赖
 使用 `useBookStore` 获取当前选中的书籍 ID（`currentBookId`）
@@ -78,9 +78,59 @@ function RAGChat() {
 ### 主要组件
 ```jsx
 function Characters() {
-  // 人物列表
-  // 关系图（可选）
-  // 人物详情面板
+  // 搜索框 - 输入人物名触发分析
+  // 已分析人物网格 - 点击跳转详情页
+}
+```
+
+### 跳转方式
+使用 `window.open()` 在新标签页打开人物详情：
+```javascript
+window.open(`/characters/${encodeURIComponent(name)}`, '_blank')
+```
+
+---
+
+## CharacterDetail（人物详情）
+
+### 功能
+- 全屏独立布局（无侧边栏）
+- 展示人物完整档案：
+  - 基础信息（名字、别名、首次出场、出场章数）
+  - 人物概述（Summary）
+  - 成长轨迹（Growth Arc）
+  - 性格剖析（Core Traits）
+  - 优点 / 缺点
+  - 经典语录
+  - 人物关系
+  - 章节出现（可展开查看事件、互动、台词）
+- 流式分析进度显示（SSE）
+- 浮动关闭按钮
+
+### URL 参数
+| 参数 | 类型 | 描述 |
+|------|------|------|
+| name | string | 人物名称（URL 编码） |
+
+### 布局特点
+- 独立全屏布局，不使用主布局的侧边栏
+- Editorial 杂志风格设计
+- 编号式 Section Header（01、02、03...）
+
+### 依赖
+- `useBookStore` - 获取 `currentBookId`
+- `useCharacterAnalysis` - 人物分析 Hook（SSE 流式）
+
+### 主要组件
+```jsx
+function CharacterDetail() {
+  // Loading 状态 - 流式分析进度
+  // Error 状态 - 分析失败提示
+  // Result 状态 - 完整人物档案展示
+}
+
+function SectionHeader({ number, title, subtitle }) {
+  // 编号式标题组件（01 成长轨迹 Growth Arc）
 }
 ```
 
