@@ -10,7 +10,7 @@ from typing import Optional
 import chardet
 
 from ..config import settings
-from ..knowledge.models import Chapter, ChapterAnalysis, Character
+from ..knowledge.models import Chapter, ChapterAnalysis, Character, DetailedCharacter
 
 
 @dataclass
@@ -181,9 +181,15 @@ class BookManager:
         chapters = []
 
         # Chapter patterns
+        # 支持：第X章、第X掌（错别字）、第X （缺少"章"字）
+        # 注意：
+        #   - 中文数字包含"两"（如"第两千章"）、"份"（"千"的错别字）
+        #   - "地"是"第"的常见错别字（如"地五千五百零七章"）
         patterns = [
-            r"^第[0-9]+章[：:\s]?.*",
-            r"^第[零一二三四五六七八九十百千万]+章[：:\s]?.*",
+            r"^[第地][0-9]+[章掌][：:\s]?.*",
+            r"^[第地][零一二三四五六七八九十百千万两份]+[章掌][：:\s]?.*",
+            r"^[第地][0-9]+\s+\S+",  # 第123 标题（缺少章字）
+            r"^[第地][零一二三四五六七八九十百千万两份]+\s+\S+",  # 第一百二十三 标题
             r"^Chapter\s+\d+[：:\s]?.*",
         ]
 
@@ -265,3 +271,99 @@ class BookManager:
         file_path.write_text(
             json.dumps([c.model_dump() for c in characters], ensure_ascii=False, indent=2)
         )
+
+    # ===== 详细人物分析存储方法 =====
+
+    @classmethod
+    def save_detailed_character(cls, book_id: str, character: DetailedCharacter) -> None:
+        """保存详细人物分析"""
+        analysis_dir = settings.analysis_dir / book_id / "characters_detailed"
+        analysis_dir.mkdir(parents=True, exist_ok=True)
+
+        # 用人物名字的 hash 作为文件名
+        filename = hashlib.md5(character.name.encode()).hexdigest()[:12] + ".json"
+        file_path = analysis_dir / filename
+        file_path.write_text(
+            character.model_dump_json(indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+    @classmethod
+    def get_detailed_character(cls, book_id: str, character_name: str) -> Optional[DetailedCharacter]:
+        """获取详细人物分析"""
+        analysis_dir = settings.analysis_dir / book_id / "characters_detailed"
+        filename = hashlib.md5(character_name.encode()).hexdigest()[:12] + ".json"
+        file_path = analysis_dir / filename
+
+        if not file_path.exists():
+            return None
+
+        data = json.loads(file_path.read_text(encoding="utf-8"))
+        return DetailedCharacter(**data)
+
+    @classmethod
+    def get_detailed_characters(cls, book_id: str) -> list[DetailedCharacter]:
+        """获取所有详细人物分析"""
+        analysis_dir = settings.analysis_dir / book_id / "characters_detailed"
+        if not analysis_dir.exists():
+            return []
+
+        characters = []
+        for file_path in analysis_dir.glob("*.json"):
+            data = json.loads(file_path.read_text(encoding="utf-8"))
+            characters.append(DetailedCharacter(**data))
+
+        return characters
+
+    # ===== 章节独立存储方法 =====
+
+    @classmethod
+    def split_book_to_chapters(cls, book_id: str) -> int:
+        """将书籍拆分为独立章节文件"""
+        book = cls.get_book(book_id)
+        if not book:
+            raise ValueError(f"Book {book_id} not found")
+
+        # 创建章节目录
+        chapters_dir = settings.books_dir / book_id / "chapters"
+        chapters_dir.mkdir(parents=True, exist_ok=True)
+
+        # 保存元信息
+        meta_path = settings.books_dir / book_id / "meta.json"
+        meta_path.write_text(json.dumps({
+            "id": book.id,
+            "title": book.title,
+            "author": book.author,
+            "total_chapters": len(book.chapters),
+            "total_characters": len(book.content),
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        # 拆分章节
+        for chapter in book.chapters:
+            content = book.content[chapter.start:chapter.end + 1]
+            chapter_data = {
+                "index": chapter.index,
+                "title": chapter.title,
+                "content": content,
+            }
+            file_path = chapters_dir / f"{chapter.index + 1:04d}.json"
+            file_path.write_text(
+                json.dumps(chapter_data, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
+
+        return len(book.chapters)
+
+    @classmethod
+    def get_chapter_file(cls, book_id: str, chapter_index: int) -> Optional[dict]:
+        """从独立文件读取章节"""
+        file_path = settings.books_dir / book_id / "chapters" / f"{chapter_index + 1:04d}.json"
+        if not file_path.exists():
+            return None
+        return json.loads(file_path.read_text(encoding="utf-8"))
+
+    @classmethod
+    def has_chapter_files(cls, book_id: str) -> bool:
+        """检查是否已拆分章节文件"""
+        chapters_dir = settings.books_dir / book_id / "chapters"
+        return chapters_dir.exists() and any(chapters_dir.glob("*.json"))
