@@ -2,6 +2,18 @@
 
 AI 驱动的个人书籍深度分析工具。
 
+## 项目背景
+
+阅读长篇小说时常遇到的问题：
+- 人物太多记不住，读到后面忘了前面
+- 想找某个情节在哪章，只能手动翻
+- 缺乏对主题和人物弧光的系统理解
+
+**Book Insight** 用 AI 增强阅读体验（不替代阅读）：
+- 基于 RAG 的原文问答，回答有据可查
+- 自动提取人物关系图谱
+- 逐章 AI 分析，渐进式理解
+
 ## 功能
 
 - **RAG 问答**：基于原文的智能问答
@@ -81,3 +93,25 @@ book-insight/
 ### RAG
 - `POST /api/rag/{book_id}/index` - 创建索引
 - `POST /api/rag/{book_id}/ask` - 智能问答
+
+## 支持格式
+
+- **TXT 文件**（当前唯一支持）
+- 编码自动检测（UTF-8, GBK, GB2312）
+- 章节识别：`第X章`、`Chapter X` 等模式
+
+## 已知限制
+
+1. 仅支持 TXT 格式（暂不支持 EPUB、PDF）
+2. 章节检测依赖标准格式（如"第一章"）
+3. 单机运行，无多用户支持
+4. API 调用有成本（Claude + OpenAI）
+
+## 环境变量
+
+| 变量 | 必需 | 说明 |
+|------|------|------|
+| `ANTHROPIC_API_KEY` | 是 | Claude API 密钥 |
+| `OPENAI_API_KEY` | 是 | OpenAI 密钥（用于 Embeddings） |
+| `CLAUDE_MODEL` | 否 | 默认 claude-sonnet-4-20250514 |
+| `EMBEDDING_MODEL` | 否 | 默认 text-embedding-3-small |

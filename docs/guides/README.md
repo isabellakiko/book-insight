@@ -26,8 +26,8 @@
 | `/weekly` | 每周文档优化 | 每周日 |
 | `/monthly` | 每月归档 | 每月初 |
 | `/audit` | 标准健康检查 | 每周 |
-| `/deep-audit` | 全面深度审计 | Phase 完成后 |
-| `/fix` | ESLint 自动修复 | 按需 |
+
+> 注：`/deep-audit` 和 `/fix` 为可选命令，需根据项目需求配置
 
 ---
 
