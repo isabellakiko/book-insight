@@ -1,0 +1,44 @@
+[project]
+name = "book-insight-api"
+version = "0.1.0"
+description = "Book Insight API - AI-powered book analysis backend"
+requires-python = ">=3.11"
+dependencies = [
+    # Web Framework
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "python-multipart>=0.0.12",
+
+    # AI
+    "anthropic>=0.40.0",
+    "openai>=1.50.0",
+
+    # RAG
+    "chromadb>=0.5.0",
+    "langchain>=0.3.0",
+    "langchain-anthropic>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-chroma>=0.1.0",
+    "langchain-text-splitters>=0.3.0",
+
+    # Data
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "sqlmodel>=0.0.22",
+    "aiosqlite>=0.20.0",
+
+    # Utils
+    "python-dotenv>=1.0.0",
+    "chardet>=5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
