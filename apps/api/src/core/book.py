@@ -290,28 +290,58 @@ class BookManager:
 
     @classmethod
     def get_detailed_character(cls, book_id: str, character_name: str) -> Optional[DetailedCharacter]:
-        """获取详细人物分析"""
-        analysis_dir = settings.analysis_dir / book_id / "characters_detailed"
+        """获取详细人物分析（优先从新格式 profile.json 读取）"""
+        # 新格式：characters/{name}/profile.json
+        new_dir = settings.analysis_dir / book_id / "characters" / character_name
+        profile_path = new_dir / "profile.json"
+
+        if profile_path.exists():
+            data = json.loads(profile_path.read_text(encoding="utf-8"))
+            # 读取 appearances（如果 profile 中没有完整数据）
+            if not data.get("appearances"):
+                appearances_path = new_dir / "appearances_summary.json"
+                if appearances_path.exists():
+                    appearances_data = json.loads(appearances_path.read_text(encoding="utf-8"))
+                    data["appearances"] = appearances_data.get("appearances", [])
+            # 设置分析状态
+            data["analysis_status"] = "completed"
+            return DetailedCharacter(**data)
+
+        # 旧格式：characters_detailed/{hash}.json
+        old_dir = settings.analysis_dir / book_id / "characters_detailed"
         filename = hashlib.md5(character_name.encode()).hexdigest()[:12] + ".json"
-        file_path = analysis_dir / filename
+        file_path = old_dir / filename
 
-        if not file_path.exists():
-            return None
+        if file_path.exists():
+            data = json.loads(file_path.read_text(encoding="utf-8"))
+            return DetailedCharacter(**data)
 
-        data = json.loads(file_path.read_text(encoding="utf-8"))
-        return DetailedCharacter(**data)
+        return None
 
     @classmethod
     def get_detailed_characters(cls, book_id: str) -> list[DetailedCharacter]:
         """获取所有详细人物分析"""
-        analysis_dir = settings.analysis_dir / book_id / "characters_detailed"
-        if not analysis_dir.exists():
-            return []
-
         characters = []
-        for file_path in analysis_dir.glob("*.json"):
-            data = json.loads(file_path.read_text(encoding="utf-8"))
-            characters.append(DetailedCharacter(**data))
+
+        # 新格式：遍历 characters/ 目录
+        new_dir = settings.analysis_dir / book_id / "characters"
+        if new_dir.exists():
+            for char_dir in new_dir.iterdir():
+                if char_dir.is_dir():
+                    profile_path = char_dir / "profile.json"
+                    if profile_path.exists():
+                        data = json.loads(profile_path.read_text(encoding="utf-8"))
+                        data["analysis_status"] = "completed"
+                        characters.append(DetailedCharacter(**data))
+
+        # 旧格式：遍历 characters_detailed/ 目录
+        old_dir = settings.analysis_dir / book_id / "characters_detailed"
+        if old_dir.exists():
+            existing_names = {c.name for c in characters}
+            for file_path in old_dir.glob("*.json"):
+                data = json.loads(file_path.read_text(encoding="utf-8"))
+                if data.get("name") not in existing_names:
+                    characters.append(DetailedCharacter(**data))
 
         return characters
 

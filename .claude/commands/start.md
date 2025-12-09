@@ -59,7 +59,7 @@ echo "当前时间: $(date +%Y-%m-%d) $(date +%H:%M) (第 $(date +%V) 周)"
 
 1. **项目**: Book Insight - AI 书籍深度分析工具
 2. **阶段**: [从 CONTEXT.md 获取]
-3. **技术栈**: React 18 + FastAPI + ChromaDB + Claude API
+3. **技术栈**: React 18 + FastAPI + 阿里云百炼(qwen-plus)
 4. **下一步**: [从 CURRENT.md 获取 P0 任务]
 
 ## 读取的文档

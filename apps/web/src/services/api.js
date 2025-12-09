@@ -22,6 +22,7 @@ export const booksApi = {
 
 // Analysis
 export const analysisApi = {
+  // 章节分析
   getChapterAnalyses: (bookId) => api.get(`/analysis/${bookId}/chapters`).then((r) => r.data),
   getChapterAnalysis: (bookId, chapterIndex) =>
     api.get(`/analysis/${bookId}/chapters/${chapterIndex}`).then((r) => r.data),
@@ -29,8 +30,18 @@ export const analysisApi = {
     api.post(`/analysis/${bookId}/chapters/${chapterIndex}`).then((r) => r.data),
   analyzeBatch: (bookId, start, end, parallel = 3) =>
     api.post(`/analysis/${bookId}/batch`, { start_chapter: start, end_chapter: end, parallel }).then((r) => r.data),
-  getCharacters: (bookId) => api.get(`/analysis/${bookId}/characters`).then((r) => r.data),
-  extractCharacters: (bookId) => api.post(`/analysis/${bookId}/characters/extract`).then((r) => r.data),
+
+  // 人物按需分析
+  searchCharacter: (bookId, name) =>
+    api.post(`/analysis/${bookId}/characters/search`, { name }).then((r) => r.data),
+  analyzeCharacter: (bookId, name, maxChapters = 30) =>
+    api.post(`/analysis/${bookId}/characters/analyze`, { name, max_chapters: maxChapters }).then((r) => r.data),
+  getCharacterStreamUrl: (bookId, name) =>
+    `/api/analysis/${bookId}/characters/stream?name=${encodeURIComponent(name)}`,
+  getDetailedCharacter: (bookId, name) =>
+    api.get(`/analysis/${bookId}/characters/detailed/${encodeURIComponent(name)}`).then((r) => r.data),
+  getDetailedCharacters: (bookId) =>
+    api.get(`/analysis/${bookId}/characters/detailed`).then((r) => r.data),
 }
 
 // RAG
