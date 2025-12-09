@@ -7,8 +7,10 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+.python-version
 *.egg-info/
 dist/
+apps/api/.venv/
 
 # IDE
 .idea/

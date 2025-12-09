@@ -17,38 +17,30 @@ AI 驱动的个人书籍深度分析工具。
 
 ## 快速开始
 
-### 1. 安装依赖
+### 1. 首次安装
 
 ```bash
-# 前端
-pnpm install
-
-# 后端
-cd apps/api
-uv sync  # 或 pip install -e .
+# 一键安装前端 + 后端
+pnpm setup
 ```
 
 ### 2. 配置环境变量
 
 ```bash
 cp apps/api/.env.example apps/api/.env
-# 编辑 .env 填入 API keys
+# 编辑 .env 填入 ANTHROPIC_API_KEY 和 OPENAI_API_KEY
 ```
 
-### 3. 启动服务
+### 3. 启动开发服务器
 
 ```bash
-# 启动后端
-pnpm dev:api
-
-# 启动前端（新终端）
+# 一键启动前端 + 后端（自动使用虚拟环境）
 pnpm dev
-
-# 或同时启动
-pnpm dev:all
 ```
 
-访问 http://localhost:5173
+就这么简单！自动启动：
+- 后端 API: http://localhost:8000
+- 前端: http://localhost:5173
 
 ## 项目结构
 

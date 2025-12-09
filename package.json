@@ -2,10 +2,12 @@
   "name": "book-insight",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter web dev",
-    "dev:api": "cd apps/api && uv run uvicorn src.main:app --reload --port 8000",
-    "dev:all": "concurrently \"pnpm dev:api\" \"pnpm dev\"",
-    "build": "pnpm --filter web build"
+    "dev": "concurrently -n api,web -c blue,green \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "cd apps/api && .venv/bin/uvicorn src.main:app --reload --port 8000",
+    "build": "pnpm --filter web build",
+    "setup": "pnpm install && pnpm setup:api",
+    "setup:api": "cd apps/api && python3 -m venv .venv && .venv/bin/pip install -e ."
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
