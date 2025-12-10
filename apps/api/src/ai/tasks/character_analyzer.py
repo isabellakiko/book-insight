@@ -22,6 +22,42 @@ logger = get_logger(__name__)
 class CharacterOnDemandAnalyzer:
     """按需分析单个人物"""
 
+    def _smart_sample_chapters(
+        self, found_chapters: list[int], max_chapters: int
+    ) -> list[int]:
+        """智能采样章节，覆盖人物出现的全部范围。
+
+        采样策略：
+        - 如果章节数 <= max_chapters，返回全部
+        - 否则均匀采样，确保覆盖开头、中间、结尾
+        """
+        total = len(found_chapters)
+        if total <= max_chapters:
+            return found_chapters
+
+        # 均匀采样
+        step = total / max_chapters
+        sampled_indices = set()
+
+        # 确保包含首尾
+        sampled_indices.add(0)
+        sampled_indices.add(total - 1)
+
+        # 均匀选取中间章节
+        for i in range(max_chapters - 2):
+            idx = int((i + 1) * step)
+            if idx < total:
+                sampled_indices.add(idx)
+
+        # 转换为实际章节号并排序
+        sampled = sorted([found_chapters[i] for i in sampled_indices])
+
+        logger.info(
+            f"Smart sampling: {total} chapters -> {len(sampled)} samples "
+            f"(range: {found_chapters[0]}-{found_chapters[-1]})"
+        )
+        return sampled
+
     def search(self, book: Book, character_name: str) -> CharacterSearchResult:
         """搜索人物出现的所有章节（纯文本搜索，快速）"""
         pattern = re.compile(re.escape(character_name))
@@ -264,8 +300,10 @@ class CharacterOnDemandAnalyzer:
                 error_message="未找到该人物",
             )
 
-        # 2. 限制分析章节数
-        chapters_to_analyze = search_result.found_in_chapters[:max_chapters]
+        # 2. 智能采样分析章节（覆盖全书范围）
+        chapters_to_analyze = self._smart_sample_chapters(
+            search_result.found_in_chapters, max_chapters
+        )
 
         # 3. FIXED: 并行分析每个章节，使用信号量控制并发数
         semaphore = asyncio.Semaphore(settings.analysis_concurrency)
@@ -349,8 +387,10 @@ class CharacterOnDemandAnalyzer:
             }
             return
 
-        # 2. 限制章节数
-        chapters = search_result.found_in_chapters[:max_chapters]
+        # 2. 智能采样章节
+        chapters = self._smart_sample_chapters(
+            search_result.found_in_chapters, max_chapters
+        )
         appearances = []
 
         # 3. 逐章分析
