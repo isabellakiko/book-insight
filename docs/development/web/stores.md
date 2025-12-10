@@ -13,6 +13,7 @@
 | Store | 文件 | 描述 |
 |-------|------|------|
 | bookStore | `bookStore.js` | 书籍选择和 UI 状态管理 |
+| themeStore | `themeStore.js` | 主题切换（4 套主题） |
 
 ---
 
@@ -82,6 +83,108 @@ const useBookStore = create(
   )
 );
 ```
+
+---
+
+## themeStore
+
+### 状态
+```javascript
+{
+  theme: 'light',  // 当前主题 ID
+  themes: THEMES,  // 主题配置对象（包含所有主题元数据）
+}
+```
+
+### 可用主题
+
+| ID | 名称 | 图标 | 说明 |
+|----|------|------|------|
+| light | 浅色 | Sun | 默认亮色主题 |
+| dark | 深色 | Moon | 暗色模式 |
+| sepia | 护眼 | Eye | 暖色护眼模式 |
+| midnight | 暗夜 | Stars | 深蓝暗夜主题 |
+
+### Actions
+```javascript
+// 设置指定主题
+setTheme(theme)   // 自动更新 DOM data-theme 属性
+
+// 循环切换主题
+cycleTheme()      // light → dark → sepia → midnight → light
+
+// 初始化主题（应用启动时调用）
+initTheme()       // 从 localStorage 恢复或使用默认主题
+```
+
+### 持久化
+- **存储 key**: `book-insight-theme`
+- **中间件**: Zustand persist
+- **特殊处理**: `onRehydrateStorage` 确保持久化恢复后 DOM 同步
+
+```javascript
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+const useThemeStore = create(
+  persist(
+    (set, get) => ({
+      theme: 'light',
+      themes: THEMES,
+      setTheme: (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        set({ theme });
+      },
+      // ...
+    }),
+    {
+      name: 'book-insight-theme',
+      onRehydrateStorage: () => (state) => {
+        // 持久化恢复后，确保 DOM 同步
+        if (state?.theme) {
+          document.documentElement.setAttribute('data-theme', state.theme);
+        }
+      },
+    }
+  )
+);
+```
+
+### 使用示例
+```jsx
+import { useThemeStore } from '../stores/themeStore';
+
+function Header() {
+  const { theme, setTheme, cycleTheme } = useThemeStore();
+
+  return (
+    <button onClick={cycleTheme}>
+      当前主题: {theme}
+    </button>
+  );
+}
+```
+
+### ThemeSwitcher 组件
+
+**位置**: `apps/web/src/components/ThemeSwitcher.jsx`
+
+主题切换组件，支持两种显示模式：
+
+| variant | 说明 | 适用场景 |
+|---------|------|----------|
+| `default` | 显示所有 4 个主题按钮 | 设置页面、侧边栏 |
+| `compact` | 单图标，点击循环切换 | 导航栏、紧凑空间 |
+
+**使用示例**:
+```jsx
+<ThemeSwitcher />                    {/* 完整版 - 显示所有主题 */}
+<ThemeSwitcher variant="compact" />  {/* 紧凑版 - 单图标循环 */}
+```
+
+**集成位置**:
+- `App.jsx` 侧边栏底部（default 模式）
+- `CharacterDetail.jsx` 浮动控制栏（compact 模式）
 
 ---
 

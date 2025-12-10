@@ -18,6 +18,35 @@
 
 ---
 
+## 健康检查端点
+
+### GET /api/health
+
+**描述**: 服务健康检查端点
+
+**位置**: `apps/api/src/main.py`（非独立路由文件）
+
+**响应**:
+```json
+{
+  "status": "ok",
+  "version": "0.1.0"
+}
+```
+
+**使用场景**:
+- Docker 容器健康检查 (`healthcheck`)
+- 负载均衡器探活
+- 监控系统集成（如 Prometheus）
+- CI/CD 部署验证
+
+**示例调用**:
+```bash
+curl http://localhost:8000/api/health
+```
+
+---
+
 ## Books 模块（books.py）
 
 ### GET /api/books

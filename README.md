@@ -102,6 +102,9 @@ book-insight/
 - `POST /api/rag/{book_id}/query` - 向量检索
 - `POST /api/rag/{book_id}/ask` - RAG 智能问答
 
+### 系统
+- `GET /api/health` - 健康检查
+
 ## 支持格式
 
 - **TXT 文件**（当前唯一支持）
