@@ -48,119 +48,47 @@
 
 ---
 
-### Day 2 - 2025-12-09（周二）⭐ 阿里云百炼适配 + 功能联调
+### Day 2 - 2025-12-09（周二）⭐ 多阶段开发日
 
-**核心任务**: 将 AI 服务从 Claude/OpenAI 切换到阿里云百炼，完成功能测试
+> 四个阶段：百炼适配 → 架构重构 → 文档审计 → UI 重设计
 
-**完成工作**：
+**阶段 1: 阿里云百炼适配**
+
+将 AI 服务从 Claude/OpenAI 切换到阿里云百炼：
 - ✅ 修复 pnpm workspace 过滤器 (`web` → `book-insight-web`)
-- ✅ 适配阿里云百炼 API（OpenAI 兼容模式）
-  - 修改 `config.py`：dashscope_api_key + dashscope_base_url
-  - 修改 `ai/client.py`：Anthropic SDK → OpenAI SDK
-  - 修改 `rag/store.py`：Embeddings 使用百炼 API
-  - 更新 `.env.example`：百炼配置模板
-- ✅ 测试章节分析 - 成功
-- ✅ 测试人物提取 - 成功
-- ✅ 修复人物 first_appearance bug（之前全部返回第一章）
+- ✅ 适配百炼 API（OpenAI 兼容模式）
+- ✅ 测试章节分析、人物提取 - 成功
+- ✅ 修复人物 first_appearance bug
 
-**技术亮点**：
-- 百炼 OpenAI 兼容模式：`https://dashscope.aliyuncs.com/compatible-mode/v1`
-- 模型配置：`qwen-plus`（对话）+ `text-embedding-v3`（向量）
-- 人物提取改进：AI 返回章节标题 → 映射回章节索引
+技术亮点：百炼 OpenAI 兼容模式 + `qwen-plus` + `text-embedding-v3`
+
+**阶段 2: 人物分析架构重构**
+
+核心决策：从"实时 AI 分析"改为"离线分析 + 前端展示"
+
+架构调整：
+1. 章节独立存储 - 每章一个 JSON 文件
+2. 人物分层存储 - profile.json + appearances/
+3. 离线分析模式 - Claude Code 中分析，前端展示
+4. RAG 暂缓
+
+**阶段 3: 文档全面审计**
+
+审计项目文档，确保与代码状态同步：
+- ✅ 更新 README.md、routers.md、ai-tasks.md、data-storage.md
+- 文档统计：+300 行（SSE 事件、Prompt 模板、章节检测）
+
+**阶段 4: 前端 UI 重设计**
+
+Editorial 杂志风格设计：
+- ✅ 色彩对比度优化（金色更亮、文字更白）
+- ✅ 人物详情页全新设计（独立布局、编号 Section）
+- ✅ 组件样式增强（渐变、阴影、悬停效果）
+
+技术亮点：条件路由、CSS columns、first-letter 首字下沉
 
 **遇到的问题**：
-- **问题**: 人物 first_appearance 全部显示第一章
-- **原因**: 代码硬编码 `first_appearance=sample_chapters[0]`
-- **解决**: 让 AI 返回 first_chapter 标题，再映射到实际索引
-
----
-
-### Day 2 续 - 人物分析架构重构
-
-**核心决策**：从"实时 AI 分析"改为"离线分析 + 前端展示"
-
-**架构调整**：
-1. **章节独立存储** - 每章一个 JSON 文件，便于引用和溯源
-2. **人物分层存储** - profile.json（概述）+ appearances/（按章节）
-3. **离线分析模式** - Claude Code 中分析，前端只展示结果
-4. **RAG 暂缓** - 向量化问题后续处理
-
-**新数据结构**：
-```
-data/
-├── books/{book_id}/
-│   ├── meta.json              # 书籍元信息
-│   └── chapters/
-│       ├── 0001.json          # 第1章
-│       └── ...
-└── analysis/{book_id}/characters/{name}/
-    ├── profile.json           # 基础信息 + 概述
-    ├── relations.json         # 人物关系
-    └── appearances/
-        ├── 0001.json          # 第1章出场
-        └── ...
-```
-
-**当前计划**：
-1. [x] 拆分《那些热血飞扬的日子》为章节文件
-2. [ ] 分析人物"赵秦"：
-   - [x] 搜索出现的所有章节（1112 章，16169 次提及）
-   - [ ] 逐章分析（事件、互动）
-   - [ ] 生成人物档案
-3. [ ] 更新前端展示逻辑
-
----
-
-### Day 2 续续 - 文档全面审计与优化
-
-**核心任务**: 审计项目文档，确保与代码实际状态同步
-
-**完成工作**：
-- ✅ 后端深度探索，生成完整架构报告
-- ✅ 更新 README.md - 技术栈改为阿里云百炼
-- ✅ 更新 routers.md - 补充人物分析 SSE 端点、前端示例
-- ✅ 更新 ai-tasks.md - 补充人物分析模块、完整 Prompt 模板
-- ✅ 更新 data-storage.md - 章节检测格式、向量存储配置
-- ✅ 更新 CONTEXT.md - API 成本说明
-- ✅ 更新 guides/README.md - 移除未实现命令引用
-
-**文档更新统计**：
-- ai-tasks.md: +116 行（人物按需分析模块）
-- data-storage.md: +76 行（章节检测、向量存储）
-- routers.md: +115 行（人物分析端点、SSE 事件）
-
-**技术亮点**：
-- 5 种章节检测正则模式（含错别字处理）
-- SSE 流式分析完整事件定义
-- 前端 EventSource 使用示例
-
----
-
-### Day 2 续续续 - 前端 UI 重设计
-
-**核心任务**: 优化前端视觉设计，实现 Editorial 杂志风格
-
-**完成工作**：
-- ✅ 色彩对比度优化
-  - 金色更亮：`#c9a55c` → `#e6c158`
-  - 文字更白：`#f5f0e6` → `#faf8f4`
-  - 背景更深，增强层次感
-- ✅ 人物详情页全新设计
-  - 点击人物卡片在新标签页打开 (`window.open('_blank')`)
-  - 独立全屏布局，无侧边栏
-  - Editorial 杂志风格排版
-  - 编号式 Section Header（01、02、03...）
-  - 多栏布局 + 首字下沉效果
-- ✅ 组件样式增强
-  - 卡片渐变背景 + 悬停辉光
-  - 按钮渐变 + 阴影效果
-  - 标签边框 + 文字阴影
-
-**技术亮点**：
-- 条件路由：CharacterDetail 独立布局
-- CSS columns 多栏排版
-- first-letter 首字下沉
-- tracking/letter-spacing 排版增强
+- 人物 first_appearance 全部显示第一章 → AI 返回标题映射索引
 
 ---
 
