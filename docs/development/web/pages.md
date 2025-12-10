@@ -4,7 +4,7 @@
 
 **位置**: `apps/web/src/pages/`
 **框架**: React 18 + Vite
-**最后更新**: 2025-12-10
+**最后更新**: 2025-12-10 17:10
 
 ---
 
@@ -95,6 +95,7 @@ window.open(`/characters/${encodeURIComponent(name)}`, '_blank')
 
 ### 功能
 - 全屏独立布局（无侧边栏）
+- **纯展示模式**：只读取已有分析数据，不触发实时 AI 分析
 - 展示人物完整档案：
   - 基础信息（名字、别名、首次出场、出场章数）
   - 人物概述（Summary）
@@ -104,8 +105,20 @@ window.open(`/characters/${encodeURIComponent(name)}`, '_blank')
   - 经典语录
   - 人物关系
   - 章节出现（可展开查看事件、互动、台词）
-- 流式分析进度显示（SSE）
+- 无数据时显示"暂无分析数据"提示
 - 浮动关闭按钮
+
+### 数据来源
+分析数据通过脚本离线生成，存储在：
+```
+data/analysis/{book_id}/characters_detailed/{hash}.json
+```
+
+**分析脚本**（位于 `scripts/` 目录）：
+```bash
+python3 scripts/reanalyze_zhaoqin.py      # 智能采样分析
+python3 scripts/continue_zhaoqin_analysis.py  # 增量分析
+```
 
 ### URL 参数
 | 参数 | 类型 | 描述 |
@@ -119,13 +132,14 @@ window.open(`/characters/${encodeURIComponent(name)}`, '_blank')
 
 ### 依赖
 - `useBookStore` - 获取 `currentBookId`
-- `useCharacterAnalysis` - 人物分析 Hook（SSE 流式）
+- `useCharacterAnalysis` - 人物分析 Hook（只使用 `loadCached`）
 
 ### 主要组件
 ```jsx
 function CharacterDetail() {
-  // Loading 状态 - 流式分析进度
-  // Error 状态 - 分析失败提示
+  // Loading 状态 - 加载缓存数据
+  // NoData 状态 - 暂无分析数据（提示运行脚本）
+  // Error 状态 - 加载失败提示
   // Result 状态 - 完整人物档案展示
 }
 
@@ -140,67 +154,61 @@ function SectionHeader({ number, title, subtitle }) {
 
 **位置**: `apps/web/src/hooks/useCharacterAnalysis.js`
 
-用于人物按需分析的 SSE 流式 Hook，CharacterDetail 页面核心依赖。
+用于加载人物分析数据的 Hook。
+
+> **重要**: 当前架构下，前端只使用 `loadCached` 方法加载已有数据，不触发实时 AI 分析。
 
 ### 状态
 
 | 状态 | 类型 | 描述 |
 |------|------|------|
-| status | string | 分析状态：idle/searching/analyzing/completed/error |
-| searchResult | object | 搜索结果：{ name, found_in_chapters, total_mentions } |
-| appearances | array | 章节出场详情数组（逐步累积） |
+| status | string | 状态：idle/searching/completed/error |
+| result | object | 分析结果（完整人物档案） |
+| appearances | array | 章节出场详情数组 |
 | relations | array | 人物关系数组 |
-| result | object | 最终分析结果（完整人物档案） |
 | error | string | 错误信息 |
-| progress | number | 分析进度 0-100 |
 
 ### 方法
 
-| 方法 | 参数 | 描述 |
-|------|------|------|
-| analyzeCharacter | name: string | 触发 SSE 流式分析 |
-| loadCached | name: string | 加载已缓存的分析结果 |
-| cancel | - | 取消当前分析 |
-| reset | - | 重置所有状态 |
+| 方法 | 参数 | 描述 | 当前使用 |
+|------|------|------|----------|
+| loadCached | name: string | 加载已缓存的分析结果 | ✅ 主要使用 |
+| analyzeCharacter | name: string | 触发 SSE 流式分析 | ❌ 前端不调用 |
+| cancel | - | 取消当前分析 | - |
+| reset | - | 重置所有状态 | - |
 
-### SSE 事件类型
-
-| 事件 | 数据 | 描述 |
-|------|------|------|
-| search_complete | { name, found_in_chapters, total_mentions } | 搜索完成 |
-| chapter_analyzed | { chapter_index, appearance } | 单章分析完成 |
-| chapter_error | { chapter_index, error } | 单章分析失败 |
-| relations_analyzed | { relations } | 关系分析完成 |
-| completed | { profile, appearances, relations } 或 { error } | 全部完成 |
-
-### 使用示例
+### 使用示例（纯展示模式）
 
 ```jsx
 import { useCharacterAnalysis } from '../hooks/useCharacterAnalysis'
 
 function CharacterDetail({ bookId, name }) {
-  const {
-    status,
-    progress,
-    result,
-    error,
-    analyzeCharacter,
-    loadCached
-  } = useCharacterAnalysis(bookId)
+  const { status, result, error, loadCached } = useCharacterAnalysis(bookId)
 
   useEffect(() => {
-    // 优先加载缓存，无缓存则触发分析
-    loadCached(name).then(cached => {
-      if (!cached) analyzeCharacter(name)
-    })
-  }, [name])
+    if (name && bookId) {
+      // 只加载缓存，不触发分析
+      loadCached(name)
+    }
+  }, [name, bookId, loadCached])
 
-  if (status === 'analyzing') {
-    return <ProgressBar value={progress} />
+  if (status === 'completed' && !result && !error) {
+    return <div>暂无分析数据，请运行脚本分析</div>
   }
   // ...
 }
 ```
+
+### SSE 流式分析（脚本使用）
+
+> 以下 SSE 事件由分析脚本通过 API 触发，前端不直接使用。
+
+| 事件 | 数据 | 描述 |
+|------|------|------|
+| search_complete | { name, found_in_chapters, total_mentions } | 搜索完成 |
+| chapter_analyzed | { chapter_index, appearance } | 单章分析完成 |
+| relations_analyzed | { relations } | 关系分析完成 |
+| completed | { profile, appearances, relations } | 全部完成 |
 
 ---
 
