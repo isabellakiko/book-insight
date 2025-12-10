@@ -3,7 +3,7 @@
 > 本周/本月开发进度记录 - AI 了解最近完成了什么
 
 **本周时间**: 2025-12-09 - 2025-12-15（第 50 周）
-**最后更新**: 2025-12-10 15:30
+**最后更新**: 2025-12-10 15:20
 **当前阶段**: MVP 开发
 
 ---
@@ -92,48 +92,45 @@ Editorial 杂志风格设计：
 
 ---
 
-### Day 3 - 2025-12-10（周二）⭐ 前端设计系统重构
+### Day 3 - 2025-12-10（周三）⭐ 前端设计系统重构
 
 **核心任务**: 全面重构前端 UI，建立「温暖书房」设计系统
 
-**完成工作**：
-- ✅ 设计系统建立
-  - 4 套主题：Light / Dark / Sepia / Midnight
-  - CSS 变量驱动的主题切换
-  - `themeStore.js` 使用 Zustand 管理主题状态
-  - `ThemeSwitcher.jsx` 主题切换组件（支持 compact 模式）
-- ✅ 全部页面重构（6 个页面）
-  - Dashboard.jsx - 藏书阁首页
-  - Characters.jsx - 人物图鉴
-  - Timeline.jsx - 故事时间线
-  - RAGChat.jsx - AI 问答对话
-  - ChapterAnalysis.jsx - 章节分析
-  - CharacterDetail.jsx - 人物详情页（独立布局）
-- ✅ 核心样式重写（+2000 行 CSS）
-  - 完整的组件库：按钮、卡片、标签、输入框
-  - 响应式布局支持
-  - 滚动条主题适配
-- ✅ 人物详情页「Literary Magazine」风格
-  - Hero 大图头部
-  - Pull Quote 引用样式
-  - 编号 Section（01、02、03...）
-  - 时间线章节展开
+**阶段 1: 设计系统建立**
+- ✅ 4 套主题：Light / Dark / Sepia / Midnight
+- ✅ CSS 变量驱动的主题切换
+- ✅ `themeStore.js` 使用 Zustand 管理主题状态
+- ✅ `ThemeSwitcher.jsx` 主题切换组件（支持 compact 模式）
+
+**阶段 2: 全部页面重构（6 个页面）**
+- ✅ Dashboard.jsx - 藏书阁首页
+- ✅ Characters.jsx - 人物图鉴
+- ✅ Timeline.jsx - 故事时间线
+- ✅ RAGChat.jsx - AI 问答对话
+- ✅ ChapterAnalysis.jsx - 章节分析
+- ✅ CharacterDetail.jsx - 人物详情页（独立布局）
+
+**阶段 3: CharacterDetail V3 重构** (15:20)
+- ✅ 完全重写 CharacterDetail.jsx（306行），移除复杂 Phase 分组逻辑
+- ✅ 简洁双栏布局：左侧内容（6个区块），右侧章节足迹（sticky）
+- ✅ 移除所有 CSS 动画依赖（修复 `opacity: 0` 内容不可见 bug）
+- ✅ CSS 样式精简：从 2620 行减少到 1493 行，使用 `.cd-*` 前缀
+- ✅ 响应式设计：桌面双栏，平板/移动端单栏
 
 **技术亮点**：
 - Zustand persist 持久化主题偏好
 - CSS 变量继承实现主题无缝切换
 - 条件路由：CharacterDetail 独立于主布局
-- Intersection Observer 滚动动画（后简化为静态）
+- V3 重构：无动画依赖，内容始终可见
 
 **Bug 修复**：
 - CSS @import 顺序问题（必须在 @tailwind 之前）
-- CharacterDetail Hooks 顺序问题（useCharacterAnalysis 必须在使用其值的 useEffect 之前）
-- 简化动画逻辑，确保内容正常显示
+- CharacterDetail Hooks 顺序问题
+- CSS 动画 `opacity: 0` 导致内容不可见 → 移除所有 V2 动画
 
 **代码统计**：
-- 修改 8 个文件，新增 2 个文件
-- index.css: +2096 行（设计系统 + 组件样式）
-- CharacterDetail.jsx: 完全重写
+- index.css: 1493 行（精简 ~1100 行）
+- CharacterDetail.jsx: 306 行（V3 简洁版）
 
 ---
 

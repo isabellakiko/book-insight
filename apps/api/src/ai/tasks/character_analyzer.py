@@ -9,6 +9,7 @@ from ...knowledge.models import (
     DetailedCharacter,
     CharacterAppearance,
     CharacterRelation,
+    CharacterTrait,
 )
 from ...core.book import Book
 
@@ -160,6 +161,86 @@ class CharacterOnDemandAnalyzer:
             result.get("role", "unknown"),
         )
 
+    async def analyze_deep_profile(
+        self,
+        character_name: str,
+        appearances: list[CharacterAppearance],
+        relations: list[CharacterRelation],
+        description: str,
+        personality: list[str],
+    ) -> dict:
+        """深度分析人物，生成 summary, growth_arc, core_traits, strengths, weaknesses, notable_quotes"""
+        # 收集素材
+        all_events = []
+        all_quotes = []
+        for app in appearances:
+            for event in app.events:
+                all_events.append(f"第{app.chapter_index + 1}章({app.chapter_title}): {event}")
+            if app.quote:
+                all_quotes.append(f"「{app.quote}」")
+
+        relations_text = "\n".join([
+            f"- {r.target_name}({r.relation_type}): {r.description}"
+            for r in relations
+        ])
+
+        prompt = f"""基于以下信息，对人物"{character_name}"进行深度分析：
+
+## 基本信息
+简介：{description}
+性格：{', '.join(personality)}
+
+## 人物关系
+{relations_text if relations_text else '暂无'}
+
+## 主要事件（部分）
+{chr(10).join(all_events[:30])}
+
+## 台词/描述（部分）
+{chr(10).join(all_quotes[:10])}
+
+请以 JSON 格式返回：
+{{
+    "summary": "一句话概括这个人物（15-30字）",
+    "growth_arc": "人物成长轨迹描述（100-200字），描述其从出场到现在的变化",
+    "core_traits": [
+        {{
+            "trait": "性格特征名称",
+            "description": "这个特征如何体现（一句话）",
+            "evidence": "支撑证据（某章节的具体表现）"
+        }}
+    ],
+    "strengths": ["优点1", "优点2", "优点3"],
+    "weaknesses": ["缺点1", "缺点2"],
+    "notable_quotes": ["最经典的语录1", "最经典的语录2", "最经典的语录3"]
+}}
+
+注意：
+- core_traits 最多 5 个，按重要性排序
+- notable_quotes 从已有台词中选择最能代表人物的 3-5 句
+- 如果信息不足，可以返回空数组或简短描述
+"""
+        result = await chat_json(prompt, system="你是专业的小说人物分析师，擅长深度解读人物性格和成长轨迹。")
+
+        # 解析 core_traits
+        core_traits = []
+        for t in result.get("core_traits", [])[:5]:
+            if isinstance(t, dict):
+                core_traits.append(CharacterTrait(
+                    trait=t.get("trait", ""),
+                    description=t.get("description", ""),
+                    evidence=t.get("evidence", ""),
+                ))
+
+        return {
+            "summary": result.get("summary", ""),
+            "growth_arc": result.get("growth_arc", ""),
+            "core_traits": core_traits,
+            "strengths": result.get("strengths", [])[:5],
+            "weaknesses": result.get("weaknesses", [])[:5],
+            "notable_quotes": result.get("notable_quotes", [])[:5],
+        }
+
     async def analyze_full(
         self,
         book: Book,
@@ -198,14 +279,29 @@ class CharacterOnDemandAnalyzer:
             character_name, appearances
         )
 
+        # 6. 深度分析
+        deep_profile = await self.analyze_deep_profile(
+            character_name, appearances, relations, description, personality
+        )
+
         return DetailedCharacter(
             name=character_name,
             description=description,
             role=role,
             personality=personality,
+            # 深度分析字段
+            summary=deep_profile["summary"],
+            growth_arc=deep_profile["growth_arc"],
+            core_traits=deep_profile["core_traits"],
+            strengths=deep_profile["strengths"],
+            weaknesses=deep_profile["weaknesses"],
+            notable_quotes=deep_profile["notable_quotes"],
+            # 出现信息
             appearances=appearances,
             first_appearance=search_result.found_in_chapters[0],
+            last_appearance=search_result.found_in_chapters[-1],
             total_chapters=len(search_result.found_in_chapters),
+            total_analyzed_chapters=len(chapters_to_analyze),
             relations=relations,
             analysis_status="completed",
             analyzed_chapters=chapters_to_analyze,
@@ -275,19 +371,178 @@ class CharacterOnDemandAnalyzer:
         description, personality, role = await self.analyze_personality(
             character_name, appearances
         )
+        yield {
+            "event": "personality_analyzed",
+            "data": {"description": description, "personality": personality, "role": role},
+        }
 
-        # 6. 返回完整结果
+        # 6. 深度分析
+        deep_profile = await self.analyze_deep_profile(
+            character_name, appearances, relations, description, personality
+        )
+        yield {
+            "event": "deep_profile_analyzed",
+            "data": {
+                "summary": deep_profile["summary"],
+                "growth_arc": deep_profile["growth_arc"],
+                "strengths": deep_profile["strengths"],
+                "weaknesses": deep_profile["weaknesses"],
+                "notable_quotes": deep_profile["notable_quotes"],
+            },
+        }
+
+        # 7. 返回完整结果
         result = DetailedCharacter(
             name=character_name,
             description=description,
             role=role,
             personality=personality,
+            # 深度分析字段
+            summary=deep_profile["summary"],
+            growth_arc=deep_profile["growth_arc"],
+            core_traits=deep_profile["core_traits"],
+            strengths=deep_profile["strengths"],
+            weaknesses=deep_profile["weaknesses"],
+            notable_quotes=deep_profile["notable_quotes"],
+            # 出现信息
             appearances=appearances,
             first_appearance=search_result.found_in_chapters[0],
+            last_appearance=search_result.found_in_chapters[-1],
             total_chapters=len(search_result.found_in_chapters),
+            total_analyzed_chapters=len(appearances),
             relations=relations,
             analysis_status="completed",
             analyzed_chapters=[a.chapter_index for a in appearances],
+        )
+
+        yield {"event": "completed", "data": result.model_dump()}
+
+    async def analyze_continue(
+        self,
+        book: Book,
+        existing: DetailedCharacter,
+        additional_chapters: int = 30,
+    ) -> AsyncGenerator[dict, None]:
+        """继续分析更多章节，基于已有分析结果"""
+        character_name = existing.name
+
+        # 1. 重新搜索获取完整章节列表
+        search_result = self.search(book, character_name)
+        yield {
+            "event": "search_complete",
+            "data": search_result.model_dump(),
+        }
+
+        if not search_result.found_in_chapters:
+            yield {"event": "completed", "data": existing.model_dump()}
+            return
+
+        # 2. 找出尚未分析的章节
+        analyzed_set = set(existing.analyzed_chapters)
+        remaining = [c for c in search_result.found_in_chapters if c not in analyzed_set]
+
+        if not remaining:
+            yield {
+                "event": "info",
+                "data": {"message": "所有章节已分析完毕"},
+            }
+            yield {"event": "completed", "data": existing.model_dump()}
+            return
+
+        # 3. 取要分析的章节
+        chapters_to_analyze = remaining[:additional_chapters]
+        yield {
+            "event": "continue_info",
+            "data": {
+                "already_analyzed": len(existing.analyzed_chapters),
+                "remaining": len(remaining),
+                "will_analyze": len(chapters_to_analyze),
+            },
+        }
+
+        # 4. 复制已有的出现信息
+        appearances = list(existing.appearances)
+
+        # 5. 逐章分析新章节
+        for idx in chapters_to_analyze:
+            chapter = book.chapters[idx]
+            content = book.content[chapter.start:chapter.end + 1]
+
+            try:
+                app = await self.analyze_chapter_appearance(
+                    character_name, idx, chapter.title, content
+                )
+                appearances.append(app)
+
+                yield {
+                    "event": "chapter_analyzed",
+                    "data": {
+                        "chapter_index": idx,
+                        "chapter_title": chapter.title,
+                        "appearance": app.model_dump(),
+                    },
+                }
+            except Exception as e:
+                yield {
+                    "event": "chapter_error",
+                    "data": {"chapter_index": idx, "error": str(e)},
+                }
+
+        # 6. 重新分析关系（基于所有已分析章节）
+        relations = await self.analyze_relations(character_name, appearances)
+        yield {
+            "event": "relations_analyzed",
+            "data": {"relations": [r.model_dump() for r in relations]},
+        }
+
+        # 7. 重新分析性格
+        description, personality, role = await self.analyze_personality(
+            character_name, appearances
+        )
+        yield {
+            "event": "personality_analyzed",
+            "data": {"description": description, "personality": personality, "role": role},
+        }
+
+        # 8. 深度分析
+        deep_profile = await self.analyze_deep_profile(
+            character_name, appearances, relations, description, personality
+        )
+        yield {
+            "event": "deep_profile_analyzed",
+            "data": {
+                "summary": deep_profile["summary"],
+                "growth_arc": deep_profile["growth_arc"],
+                "strengths": deep_profile["strengths"],
+                "weaknesses": deep_profile["weaknesses"],
+                "notable_quotes": deep_profile["notable_quotes"],
+            },
+        }
+
+        # 9. 合并所有已分析章节
+        all_analyzed = sorted(set(existing.analyzed_chapters) | set(chapters_to_analyze))
+
+        # 10. 返回完整结果
+        result = DetailedCharacter(
+            name=character_name,
+            aliases=existing.aliases,
+            description=description,
+            role=role,
+            personality=personality,
+            summary=deep_profile["summary"],
+            growth_arc=deep_profile["growth_arc"],
+            core_traits=deep_profile["core_traits"],
+            strengths=deep_profile["strengths"],
+            weaknesses=deep_profile["weaknesses"],
+            notable_quotes=deep_profile["notable_quotes"],
+            appearances=appearances,
+            first_appearance=search_result.found_in_chapters[0],
+            last_appearance=search_result.found_in_chapters[-1],
+            total_chapters=len(search_result.found_in_chapters),
+            total_analyzed_chapters=len(all_analyzed),
+            relations=relations,
+            analysis_status="completed",
+            analyzed_chapters=all_analyzed,
         )
 
         yield {"event": "completed", "data": result.model_dump()}

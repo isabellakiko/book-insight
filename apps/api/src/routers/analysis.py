@@ -235,3 +235,52 @@ async def list_detailed_characters(book_id: str) -> list[DetailedCharacter]:
         raise HTTPException(status_code=404, detail="Book not found")
 
     return BookManager.get_detailed_characters(book_id)
+
+
+class CharacterContinueRequest(BaseModel):
+    """Request to continue analyzing character."""
+    name: str
+    additional_chapters: int = 30
+
+
+@router.get("/{book_id}/characters/continue")
+async def continue_analyze_character_stream(
+    book_id: str,
+    name: str,
+    additional_chapters: int = 30,
+):
+    """继续分析人物更多章节（SSE 流式）"""
+    book = BookManager.get_book(book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    # 获取已有分析结果
+    existing = BookManager.get_detailed_character(book_id, name)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Character not found. Please analyze first.")
+
+    async def event_generator():
+        analyzer = CharacterOnDemandAnalyzer()
+        result = None
+
+        async for event in analyzer.analyze_continue(book, existing, additional_chapters):
+            event_type = event["event"]
+            data = json.dumps(event["data"], ensure_ascii=False)
+            yield f"event: {event_type}\ndata: {data}\n\n"
+
+            if event_type == "completed" and "error" not in event["data"]:
+                result = DetailedCharacter(**event["data"])
+
+        # 保存更新后的结果
+        if result and result.analysis_status == "completed":
+            BookManager.save_detailed_character(book_id, result)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
