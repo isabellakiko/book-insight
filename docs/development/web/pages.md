@@ -4,7 +4,7 @@
 
 **位置**: `apps/web/src/pages/`
 **框架**: React 18 + Vite
-**最后更新**: 2025-12-10 17:10
+**最后更新**: 2025-12-11
 
 ---
 
@@ -276,3 +276,4 @@ const { currentBook, setCurrentBook } = useBookStore();
 - **路由配置**: `apps/web/src/App.jsx`
 - **API 服务**: `apps/web/src/services/api.js`
 - **状态管理**: `apps/web/src/stores/bookStore.js`
+- **自定义 Hooks**: [hooks.md](./hooks.md)
