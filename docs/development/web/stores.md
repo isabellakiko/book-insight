@@ -4,7 +4,7 @@
 
 **位置**: `apps/web/src/stores/`
 **库**: Zustand 5.0
-**最后更新**: 2025-12-09
+**最后更新**: 2025-12-10
 
 ---
 
@@ -103,7 +103,89 @@ const useBookStore = create(
 
 ---
 
+## 与 Hook 的协作关系
+
+### useCharacterAnalysis Hook
+
+**位置**: `apps/web/src/hooks/useCharacterAnalysis.js`
+
+此 Hook 处理人物分析的 SSE 流式状态，与 `bookStore` 协作获取 `currentBookId`。
+
+| 职责划分 | 负责方 | 说明 |
+|----------|--------|------|
+| 当前书籍 ID | bookStore | 跨页面共享，持久化 |
+| 分析状态 | useCharacterAnalysis | 页面级，SSE 流式 |
+| 分析结果缓存 | TanStack Query | 服务器状态，自动失效 |
+
+**Hook 返回的状态**:
+```javascript
+{
+  status,        // 'idle' | 'searching' | 'analyzing' | 'completed' | 'error'
+  searchResult,  // 搜索结果（章节列表、提及次数）
+  appearances,   // 已分析的出场记录数组
+  relations,     // 人物关系数组
+  result,        // 完整分析结果
+  error,         // 错误信息
+  progress,      // 分析进度 (0-100)
+}
+```
+
+**Hook 提供的方法**:
+```javascript
+analyzeCharacter(name)  // 启动 SSE 流式分析
+loadCached(name)        // 加载已分析的缓存
+cancel()                // 取消当前分析
+reset()                 // 重置状态
+```
+
+### 组件依赖图
+
+```
+CharacterDetail
+├── useBookStore → currentBookId
+├── useCharacterAnalysis(bookId)
+│   ├── analyzeCharacter(name) → SSE 流
+│   └── loadCached(name) → API 缓存
+└── UI 渲染（进度条、分析结果）
+
+RAGChat
+├── useBookStore → currentBookId
+├── useQuery(['rag-status']) → 索引状态
+├── useMutation → 发送问题
+└── 消息列表渲染
+
+Dashboard
+├── useQuery(['books']) → 书籍列表
+├── useMutation(upload) → 上传书籍
+├── useMutation(delete) → 删除书籍
+└── useBookStore.setCurrentBook → 选择书籍
+```
+
+### 状态管理原则
+
+1. **全局状态**（Zustand）
+   - 用户选择：`currentBookId`
+   - UI 偏好：`sidebarOpen`
+   - 特点：需要跨页面共享、需要持久化
+
+2. **页面状态**（组件内 useState）
+   - 表单输入
+   - 临时 UI 状态（展开/折叠）
+   - 特点：页面内部使用、无需持久化
+
+3. **服务器状态**（TanStack Query）
+   - 书籍列表、章节数据
+   - 分析结果缓存
+   - 特点：来自服务器、需要缓存和自动刷新
+
+4. **流式状态**（自定义 Hook）
+   - SSE 进度（useCharacterAnalysis）
+   - 特点：实时更新、需要连接管理
+
+---
+
 ## 相关文件
 
 - **API 服务**: `apps/web/src/services/api.js`
 - **页面组件**: `apps/web/src/pages/`
+- **自定义 Hook**: `apps/web/src/hooks/useCharacterAnalysis.js`

@@ -4,7 +4,7 @@
 
 **框架**: FastAPI
 **Base URL**: `http://localhost:8000`
-**最后更新**: 2025-12-09
+**最后更新**: 2025-12-10
 
 ---
 
@@ -423,6 +423,87 @@ eventSource.addEventListener('completed', (e) => {
 | 400 | 请求参数错误 |
 | 404 | 资源不存在 |
 | 500 | 服务器内部错误 |
+
+---
+
+## 详细错误码
+
+### Books 模块
+
+| 端点 | 状态码 | 错误场景 | detail 消息 |
+|------|--------|----------|-------------|
+| GET /api/books/{id} | 404 | 书籍不存在 | `"Book not found"` |
+| GET /api/books/{id}/chapters | 404 | 书籍不存在 | `"Book not found"` |
+| GET /api/books/{id}/chapters/{index}/content | 404 | 书籍不存在 | `"Book not found"` |
+| GET /api/books/{id}/chapters/{index}/content | 404 | 章节索引越界 | `"Chapter not found"` |
+| POST /api/books/upload | 400 | 非 TXT 文件 | `"Only .txt files are supported"` |
+| DELETE /api/books/{id} | 404 | 书籍不存在 | `"Book not found"` |
+
+### Analysis 模块
+
+| 端点 | 状态码 | 错误场景 | detail 消息 |
+|------|--------|----------|-------------|
+| GET /{book_id}/chapters | 404 | 书籍不存在 | `"Book not found"` |
+| GET /{book_id}/chapters/{index} | 404 | 书籍不存在 | `"Book not found"` |
+| POST /{book_id}/chapters/{index} | 404 | 书籍不存在 | `"Book not found"` |
+| POST /{book_id}/chapters/{index} | 404 | 章节索引越界 | `"Chapter not found"` |
+| POST /{book_id}/batch | 404 | 书籍不存在 | `"Book not found"` |
+| POST /{book_id}/characters/search | 404 | 书籍不存在 | `"Book not found"` |
+| POST /{book_id}/characters/analyze | 404 | 书籍不存在 | `"Book not found"` |
+| GET /{book_id}/characters/stream | 404 | 书籍不存在 | `"Book not found"` |
+| GET /{book_id}/characters/detailed/{name} | 404 | 书籍不存在 | `"Book not found"` |
+| GET /{book_id}/characters/detailed | 404 | 书籍不存在 | `"Book not found"` |
+
+> **注意**: `GET /{book_id}/characters/detailed/{name}` 人物不存在时返回 `null`，不抛出 404。
+
+### RAG 模块
+
+| 端点 | 状态码 | 错误场景 | detail 消息 |
+|------|--------|----------|-------------|
+| POST /{book_id}/index | 404 | 书籍不存在 | `"Book not found"` |
+| GET /{book_id}/status | 404 | 书籍不存在 | `"Book not found"` |
+| POST /{book_id}/query | 404 | 书籍不存在 | `"Book not found"` |
+| POST /{book_id}/query | 400 | 未创建索引 | `"Book not indexed. Call /index first."` |
+| POST /{book_id}/ask | 404 | 书籍不存在 | `"Book not found"` |
+| POST /{book_id}/ask | 400 | 未创建索引 | `"Book not indexed. Call /index first."` |
+
+### 前端错误处理示例
+
+```javascript
+import { toast } from 'your-toast-library';
+
+async function handleApiCall() {
+  try {
+    const result = await api.analyzeChapter(bookId, chapterIndex);
+    return result;
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+
+      switch (status) {
+        case 400:
+          // 请求错误（如未索引）
+          toast.error(data.detail || '请求参数错误');
+          break;
+        case 404:
+          // 资源不存在
+          toast.error(data.detail || '资源不存在');
+          break;
+        case 500:
+          // 服务器错误
+          toast.error('服务器错误，请稍后重试');
+          break;
+        default:
+          toast.error('未知错误');
+      }
+    } else {
+      // 网络错误
+      toast.error('网络连接失败');
+    }
+    throw error;
+  }
+}
+```
 
 ---
 

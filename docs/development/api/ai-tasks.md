@@ -3,7 +3,7 @@
 > AI 分析任务的实现细节
 
 **位置**: `apps/api/src/ai/`
-**最后更新**: 2025-12-09
+**最后更新**: 2025-12-10
 
 ---
 
@@ -265,7 +265,94 @@ async for event in analyzer.analyze_stream(book, character_name):
 
 ---
 
+## RAG 检索系统（retriever.py）
+
+### 模块位置
+`apps/api/src/rag/retriever.py`
+
+### RAGRetriever 类
+
+封装向量检索 + AI 回答生成的完整流程。
+
+```python
+from src.rag.store import VectorStore
+from src.rag.retriever import RAGRetriever
+
+store = VectorStore(book_id)
+retriever = RAGRetriever(store)
+results, answer = await retriever.ask(query, top_k=10)
+```
+
+### 检索流程
+
+```
+用户问题
+    ↓
+向量相似度检索（top_k 个片段）
+    ↓
+构建上下文（[第X章 标题]\n内容）
+    ↓
+组装 Prompt + 系统提示
+    ↓
+调用 AI 生成回答
+    ↓
+返回 (results, answer)
+```
+
+### Prompt 模板
+
+```
+基于以下小说片段，回答用户的问题。
+
+相关片段：
+{context}
+
+用户问题：{query}
+
+请基于提供的内容回答问题。如果片段中没有足够信息，请说明。
+回答要简洁准确，可以引用原文作为依据。
+```
+
+### 系统提示
+```
+你是一个专业的小说分析助手。基于提供的原文片段，准确回答问题。
+```
+
+### 上下文格式
+
+检索到的多个片段按以下格式拼接：
+
+```
+[第1章 重生]
+相关文本内容...
+
+---
+
+[第5章 觉醒]
+相关文本内容...
+
+---
+
+[第10章 对决]
+相关文本内容...
+```
+
+### AI 参数配置
+
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| max_tokens | 2048 | 最大输出长度 |
+| temperature | 0.5 | 创造性（中等平衡） |
+
+### 特性
+
+- **空结果处理**: 无检索结果时返回 "未找到相关内容。"
+- **章节索引显示**: 结果中包含章节索引和标题，便于溯源
+- **分隔符**: 多个片段用 `---` 分隔，保持上下文清晰
+
+---
+
 ## 相关模块
 
-- **RAG 系统**: `apps/api/src/rag/` - 向量检索与问答
+- **RAG 向量存储**: `apps/api/src/rag/store.py` - ChromaDB 向量存储和检索
 - **知识模型**: `apps/api/src/knowledge/models.py` - 数据结构定义
