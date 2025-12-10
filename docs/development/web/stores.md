@@ -210,36 +210,15 @@ function Header() {
 
 ### useCharacterAnalysis Hook
 
-**位置**: `apps/web/src/hooks/useCharacterAnalysis.js`
-
 此 Hook 处理人物分析的 SSE 流式状态，与 `bookStore` 协作获取 `currentBookId`。
+
+> 完整 API 参考：[hooks.md](./hooks.md)
 
 | 职责划分 | 负责方 | 说明 |
 |----------|--------|------|
 | 当前书籍 ID | bookStore | 跨页面共享，持久化 |
 | 分析状态 | useCharacterAnalysis | 页面级，SSE 流式 |
 | 分析结果缓存 | TanStack Query | 服务器状态，自动失效 |
-
-**Hook 返回的状态**:
-```javascript
-{
-  status,        // 'idle' | 'searching' | 'analyzing' | 'completed' | 'error'
-  searchResult,  // 搜索结果（章节列表、提及次数）
-  appearances,   // 已分析的出场记录数组
-  relations,     // 人物关系数组
-  result,        // 完整分析结果
-  error,         // 错误信息
-  progress,      // 分析进度 (0-100)
-}
-```
-
-**Hook 提供的方法**:
-```javascript
-analyzeCharacter(name)  // 启动 SSE 流式分析
-loadCached(name)        // 加载已分析的缓存
-cancel()                // 取消当前分析
-reset()                 // 重置状态
-```
 
 ### 组件依赖图
 
@@ -291,4 +270,4 @@ Dashboard
 
 - **API 服务**: `apps/web/src/services/api.js`
 - **页面组件**: `apps/web/src/pages/`
-- **自定义 Hook**: `apps/web/src/hooks/useCharacterAnalysis.js`
+- **自定义 Hooks**: [hooks.md](./hooks.md)
