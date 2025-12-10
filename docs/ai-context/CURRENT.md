@@ -3,7 +3,7 @@
 > 本周/本月开发进度记录 - AI 了解最近完成了什么
 
 **本周时间**: 2025-12-09 - 2025-12-15（第 50 周）
-**最后更新**: 2025-12-10 17:10
+**最后更新**: 2025-12-10 18:02
 **当前阶段**: MVP 开发
 
 ---
@@ -134,6 +134,48 @@ Editorial 杂志风格设计：
 
 **阶段 4: 深度排查与架构优化** (15:30-17:00)
 
+**阶段 5: 架构重构 - 三层职责明确** (17:00-18:00)
+
+> 统一数据格式、明确职责边界、消除代码重复
+
+**Phase 1: 数据格式统一**
+- ✅ 创建 `scripts/migrate_data.py` 迁移工具
+- ✅ 迁移 `characters_detailed/{hash}.json` → `characters/{name}/profile.json`
+- ✅ 修改 `BookManager` 只使用新格式
+
+**Phase 2: 脚本重构为纯 CLI**
+- ✅ 创建 `scripts/lib/api_client.py` HTTP/SSE 客户端
+- ✅ 创建 `scripts/analyze.py` 统一分析 CLI
+- ✅ 删除 4 个旧脚本（analyze_character.py, reanalyze_zhaoqin.py 等）
+
+**Phase 3: 文档全面排查**
+- ✅ 更新 7+ 个文档文件
+- ✅ 修复 CharacterDetail.jsx 旧脚本引用
+- ✅ 验证无遗漏的旧路径/脚本引用
+
+**Phase 4: 架构文档编写**
+- ✅ 创建 `docs/development/ARCHITECTURE.md`（约 500 行）
+- ✅ 完整记录三层架构、数据流、存储结构、设计决策
+
+**新架构**：
+```
+CLI 层 (scripts/)     → 只调用 API（HTTP/SSE）
+API 层 (apps/api/)    → 所有业务逻辑的唯一入口
+数据层 (data/)        → 统一 characters/{name}/profile.json
+展示层 (apps/web/)    → 纯只读展示
+```
+
+**脚本用法**：
+```bash
+python scripts/analyze.py 赵秦              # 智能采样分析
+python scripts/analyze.py 赵秦 --continue   # 增量分析
+python scripts/analyze.py 赵秦 --status     # 查看状态
+```
+
+---
+
+**阶段 4 详细内容**: 深度排查与架构优化 (15:30-17:00)
+
 > 全面代码审计 + 架构优化
 
 **P0 安全修复**：
@@ -245,11 +287,29 @@ Editorial 杂志风格设计：
 
 ---
 
+## 下一步（恢复开发时）
+
+### 立即执行
+```bash
+# 1. 验证重构后的脚本能正常工作
+python scripts/analyze.py 赵秦 --status
+
+# 2. 可选：继续赵秦增量分析
+python scripts/analyze.py 赵秦 --continue --chapters 50
+```
+
+### 可选任务
+1. **RAG 功能测试** - 向量索引 + 智能问答
+2. **UI 细节优化** - 响应式、加载状态
+3. **其他人物分析** - 张成、夏诗等主要角色
+
+---
+
 ## 下周计划
 
 ### 优先级 1
-1. 完成功能联调测试
-2. 修复发现的 Bug
+1. 验证架构重构（analyze.py 端到端测试）
+2. RAG 问答功能测试
 
 ### 优先级 2
 1. UI 样式优化

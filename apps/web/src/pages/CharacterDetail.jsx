@@ -104,7 +104,7 @@ export default function CharacterDetail() {
           <BookOpen size={32} strokeWidth={1} />
           <h2>暂无分析数据</h2>
           <p>请先运行脚本分析该人物</p>
-          <code className="cd-code">python3 scripts/reanalyze_zhaoqin.py</code>
+          <code className="cd-code">python scripts/analyze.py {decodeURIComponent(name)}</code>
         </div>
       )}
 

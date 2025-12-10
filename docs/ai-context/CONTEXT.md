@@ -288,6 +288,7 @@ type: feat | fix | docs | refactor | perf | test | chore
 ## 快速导航
 
 - [当前进度](CURRENT.md)
+- [**架构文档**](../development/ARCHITECTURE.md) ⭐ 三层架构、数据流、存储结构
 - [API 文档](../development/api/routers.md)
 - [页面文档](../development/web/pages.md)
 
