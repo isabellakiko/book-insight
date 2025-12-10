@@ -9,8 +9,11 @@ from ..core.book import BookManager
 from ..ai.tasks.chapter import ChapterAnalyzer
 from ..ai.tasks.character_analyzer import CharacterOnDemandAnalyzer
 from ..knowledge.models import ChapterAnalysis, CharacterSearchResult, DetailedCharacter
+from ..utils.validators import validate_character_name
+from ..utils.logger import get_logger
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 
 class AnalyzeChapterRequest(BaseModel):
@@ -133,8 +136,10 @@ async def _run_batch_analysis(
         try:
             analysis = await analyzer.analyze(i, chapter.title, content)
             BookManager.save_chapter_analysis(book_id, analysis)
+            logger.info(f"Chapter {i} analyzed successfully")
         except Exception as e:
-            print(f"Error analyzing chapter {i}: {e}")
+            # FIXED: 使用日志替代 print，记录完整错误信息
+            logger.error(f"Error analyzing chapter {i}: {e}", exc_info=True)
 
 
 # ===== 人物按需分析端点 =====
@@ -182,6 +187,9 @@ async def analyze_character(
 @router.get("/{book_id}/characters/stream")
 async def analyze_character_stream(book_id: str, name: str):
     """流式分析人物（SSE，推荐用于前端）"""
+    # FIXED: 添加输入验证
+    name = validate_character_name(name)
+
     book = BookManager.get_book(book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -220,6 +228,9 @@ async def get_detailed_character(
     character_name: str,
 ) -> DetailedCharacter | None:
     """获取已分析的人物详情"""
+    # FIXED: 添加输入验证
+    character_name = validate_character_name(character_name)
+
     book = BookManager.get_book(book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -250,6 +261,9 @@ async def continue_analyze_character_stream(
     additional_chapters: int = 30,
 ):
     """继续分析人物更多章节（SSE 流式）"""
+    # FIXED: 添加输入验证
+    name = validate_character_name(name)
+
     book = BookManager.get_book(book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")

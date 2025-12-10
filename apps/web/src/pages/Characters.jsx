@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Users, Search, BookOpen, Sparkles, ExternalLink } from 'lucide-react'
+import { Users, Search, BookOpen, Sparkles, ChevronRight } from 'lucide-react'
 import { booksApi, analysisApi } from '../services/api'
 import { useBookStore } from '../stores/bookStore'
 
 export default function Characters() {
   const { currentBookId } = useBookStore()
   const [searchName, setSearchName] = useState('')
+  const navigate = useNavigate()
 
   const { data: book } = useQuery({
     queryKey: ['book', currentBookId],
@@ -21,15 +22,16 @@ export default function Characters() {
     enabled: !!currentBookId,
   })
 
+  // FIXED: 使用 navigate 替代 window.open，避免被弹窗拦截
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchName.trim()) {
-      window.open(`/characters/${encodeURIComponent(searchName.trim())}`, '_blank')
+      navigate(`/characters/${encodeURIComponent(searchName.trim())}`)
     }
   }
 
   const handleSelectCharacter = (name) => {
-    window.open(`/characters/${encodeURIComponent(name)}`, '_blank')
+    navigate(`/characters/${encodeURIComponent(name)}`)
   }
 
   if (!currentBookId) {
@@ -122,7 +124,7 @@ export default function Characters() {
                         {char.total_chapters} 章出场
                       </p>
                     </div>
-                    <ExternalLink
+                    <ChevronRight
                       size={16}
                       className="text-text-muted group-hover:text-accent transition-colors"
                     />

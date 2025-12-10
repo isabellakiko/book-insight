@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     api_port: int = 8000
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
+    # Security
+    max_upload_size: int = 50 * 1024 * 1024  # 50MB
+
+    # Analysis
+    max_chapter_content_length: int = 15000
+    max_interaction_records: int = 30
+    analysis_concurrency: int = 5
+
     # Paths
     data_dir: Path = Path("../../data")
 

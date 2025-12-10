@@ -1,9 +1,11 @@
 """Character on-demand analyzer."""
 
+import asyncio
 import re
 from typing import AsyncGenerator
 
 from ..client import chat_json
+from ...config import settings
 from ...knowledge.models import (
     CharacterSearchResult,
     DetailedCharacter,
@@ -12,6 +14,9 @@ from ...knowledge.models import (
     CharacterTrait,
 )
 from ...core.book import Book
+from ...utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class CharacterOnDemandAnalyzer:
@@ -48,9 +53,10 @@ class CharacterOnDemandAnalyzer:
         content: str,
     ) -> CharacterAppearance:
         """分析人物在单个章节的表现"""
-        # 截断过长内容
-        if len(content) > 15000:
-            content = content[:15000]
+        # FIXED: 使用配置常数截断过长内容
+        max_len = settings.max_chapter_content_length
+        if len(content) > max_len:
+            content = content[:max_len]
 
         prompt = f"""分析人物"{character_name}"在以下章节中的表现：
 
@@ -261,15 +267,30 @@ class CharacterOnDemandAnalyzer:
         # 2. 限制分析章节数
         chapters_to_analyze = search_result.found_in_chapters[:max_chapters]
 
-        # 3. 分析每个章节
+        # 3. FIXED: 并行分析每个章节，使用信号量控制并发数
+        semaphore = asyncio.Semaphore(settings.analysis_concurrency)
+
+        async def analyze_with_limit(idx: int) -> CharacterAppearance:
+            async with semaphore:
+                chapter = book.chapters[idx]
+                content = book.content[chapter.start:chapter.end + 1]
+                return await self.analyze_chapter_appearance(
+                    character_name, idx, chapter.title, content
+                )
+
+        logger.info(f"Starting parallel analysis for {len(chapters_to_analyze)} chapters")
+        tasks = [analyze_with_limit(idx) for idx in chapters_to_analyze]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # 过滤成功的结果
         appearances = []
-        for idx in chapters_to_analyze:
-            chapter = book.chapters[idx]
-            content = book.content[chapter.start:chapter.end + 1]
-            app = await self.analyze_chapter_appearance(
-                character_name, idx, chapter.title, content
-            )
-            appearances.append(app)
+        for idx, result in zip(chapters_to_analyze, results):
+            if isinstance(result, Exception):
+                logger.warning(f"Failed to analyze chapter {idx}: {result}")
+            else:
+                appearances.append(result)
+
+        logger.info(f"Completed analysis: {len(appearances)}/{len(chapters_to_analyze)} chapters")
 
         # 4. 分析关系
         relations = await self.analyze_relations(character_name, appearances)

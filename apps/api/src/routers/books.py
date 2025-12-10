@@ -94,10 +94,26 @@ async def get_chapter_content(book_id: str, chapter_index: int) -> dict:
 @router.post("/upload")
 async def upload_book(file: UploadFile) -> BookResponse:
     """Upload a new book."""
+    from ..config import settings
+
     if not file.filename or not file.filename.endswith(".txt"):
         raise HTTPException(status_code=400, detail="Only .txt files are supported")
 
-    content = await file.read()
+    # FIXED: 添加文件大小限制，防止 DoS 攻击
+    max_size = settings.max_upload_size
+    chunks: list[bytes] = []
+    total_size = 0
+
+    while chunk := await file.read(8192):
+        total_size += len(chunk)
+        if total_size > max_size:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size is {max_size // 1024 // 1024}MB"
+            )
+        chunks.append(chunk)
+
+    content = b"".join(chunks)
     book = await BookManager.import_book(content, file.filename)
 
     return BookResponse(
