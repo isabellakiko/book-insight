@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { X, ChevronDown, ChevronUp, Loader2, BookOpen } from 'lucide-react'
+import { X, ChevronRight, Loader2, Quote, Sparkles, Heart, Swords, Users, GraduationCap, BookOpen } from 'lucide-react'
 import { booksApi } from '../services/api'
 import { useBookStore } from '../stores/bookStore'
 import { useCharacterAnalysis } from '../hooks/useCharacterAnalysis'
+import { useThemeStore } from '../stores/themeStore'
+import ThemeSwitcher from '../components/ThemeSwitcher'
 
-const relationLabels = {
-  lover: '恋人',
-  family: '亲人',
-  friend: '挚友',
-  rival: '对手',
-  enemy: '敌人',
-  mentor: '导师',
-  student: '学生',
+const relationConfig = {
+  lover: { label: '恋人', icon: Heart, color: 'rose' },
+  family: { label: '亲人', icon: Users, color: 'amber' },
+  friend: { label: '挚友', icon: Users, color: 'emerald' },
+  rival: { label: '对手', icon: Swords, color: 'orange' },
+  enemy: { label: '敌人', icon: Swords, color: 'red' },
+  mentor: { label: '导师', icon: GraduationCap, color: 'blue' },
+  student: { label: '学生', icon: GraduationCap, color: 'cyan' },
 }
 
 export default function CharacterDetail() {
@@ -21,7 +23,9 @@ export default function CharacterDetail() {
   const name = decodeURIComponent(encodedName || '')
   const { currentBookId } = useBookStore()
   const [expandedChapter, setExpandedChapter] = useState(null)
+  const initTheme = useThemeStore((state) => state.initTheme)
 
+  // 1. 获取数据的 hooks 必须在前面
   const { data: book } = useQuery({
     queryKey: ['book', currentBookId],
     queryFn: () => booksApi.get(currentBookId),
@@ -39,6 +43,12 @@ export default function CharacterDetail() {
     loadCached,
   } = useCharacterAnalysis(currentBookId)
 
+  // 2. 然后是 useEffect
+  useEffect(() => {
+    initTheme()
+  }, [initTheme])
+
+  // 加载缓存或开始分析
   useEffect(() => {
     if (name && currentBookId) {
       loadCached(name).then((loaded) => {
@@ -47,19 +57,21 @@ export default function CharacterDetail() {
         }
       })
     }
-  }, [name, currentBookId])
+  }, [name, currentBookId, loadCached, analyzeCharacter])
 
   const handleClose = () => {
     window.close()
   }
 
-  // 未选择书籍
   if (!currentBookId) {
     return (
-      <div className="min-h-screen bg-[#0d0b09] flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-[#6b5d4d] text-sm tracking-[0.3em] uppercase mb-4">No Book Selected</p>
-          <h2 className="font-display text-2xl text-[#c4b5a0]">请先在主页面选择一本书</h2>
+      <div className="character-page">
+        <div className="character-empty">
+          <div className="character-empty-icon">
+            <BookOpen size={32} strokeWidth={1} />
+          </div>
+          <h2>请先选择一本书</h2>
+          <p>在主页面的藏书阁中选择要分析的书籍</p>
         </div>
       </div>
     )
@@ -68,52 +80,42 @@ export default function CharacterDetail() {
   const isLoading = status === 'searching' || status === 'analyzing'
 
   return (
-    <div className="min-h-screen bg-[#0d0b09] text-[#e8e0d4]">
-      {/* Subtle texture overlay */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`
-        }}
-      />
-
-      {/* Close Button */}
-      <button
-        onClick={handleClose}
-        className="fixed top-8 right-8 z-50 w-10 h-10 rounded-full border border-[#3d3529]/60 flex items-center justify-center text-[#6b5d4d] hover:text-[#c4b5a0] hover:border-[#c4b5a0]/40 transition-all duration-300"
-        title="关闭"
-      >
-        <X size={18} strokeWidth={1.5} />
-      </button>
+    <div className="character-page">
+      {/* Floating Controls */}
+      <div className="character-controls">
+        <ThemeSwitcher variant="compact" />
+        <button onClick={handleClose} className="character-close" title="关闭">
+          <X size={18} strokeWidth={1.5} />
+        </button>
+      </div>
 
       {/* Loading State */}
       {isLoading && (
-        <div className="min-h-screen flex items-center justify-center px-8">
-          <div className="text-center max-w-md">
-            <p className="text-[#6b5d4d] text-xs tracking-[0.4em] uppercase mb-6">
-              {status === 'searching' ? 'Searching' : 'Analyzing'}
-            </p>
-
-            <h1 className="font-display text-4xl md:text-5xl font-light text-[#e8e0d4] mb-8 tracking-wide">
-              {name}
-            </h1>
+        <div className="character-loading">
+          <div className="character-loading-content">
+            <div className="character-loading-label">
+              {status === 'searching' ? '正在搜索' : '正在分析'}
+            </div>
+            <h1 className="character-loading-name">{name}</h1>
 
             {status === 'analyzing' && searchResult && (
-              <>
-                <div className="w-full h-px bg-[#3d3529] mb-6 relative overflow-hidden">
+              <div className="character-loading-progress">
+                <div className="character-progress-bar">
                   <div
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#c9a55c] to-[#e6c158] transition-all duration-700"
+                    className="character-progress-fill"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="text-[#6b5d4d] text-sm">
-                  已分析 <span className="text-[#c4b5a0]">{appearances.length}</span> / {Math.min(searchResult.found_in_chapters.length, 30)} 章
+                <p className="character-progress-text">
+                  已分析 <span>{appearances.length}</span> / {Math.min(searchResult.found_in_chapters.length, 30)} 章
                 </p>
-              </>
+              </div>
             )}
 
             {status === 'searching' && (
-              <Loader2 size={20} className="mx-auto text-[#6b5d4d] animate-spin" />
+              <div className="character-loading-spinner">
+                <Loader2 size={24} className="animate-spin" />
+              </div>
             )}
           </div>
         </div>
@@ -121,274 +123,276 @@ export default function CharacterDetail() {
 
       {/* Error State */}
       {error && status === 'completed' && (
-        <div className="min-h-screen flex items-center justify-center px-8">
-          <div className="text-center">
-            <p className="text-[#c45050] text-xs tracking-[0.4em] uppercase mb-4">Error</p>
-            <h2 className="font-display text-2xl text-[#c4b5a0] mb-4">分析失败</h2>
-            <p className="text-[#6b5d4d]">{error}</p>
+        <div className="character-empty">
+          <div className="character-empty-icon character-empty-error">
+            <X size={32} strokeWidth={1} />
           </div>
+          <h2>分析失败</h2>
+          <p>{error}</p>
         </div>
       )}
 
-      {/* Result - Editorial Magazine Layout */}
+      {/* Result */}
       {result && status === 'completed' && (
-        <article className="relative">
-          {/* Header Section */}
-          <header className="pt-20 pb-16 px-8 md:px-16 lg:px-24 border-b border-[#2a2520]">
-            <div className="max-w-5xl mx-auto">
-              {/* Meta line */}
-              <div className="flex items-center gap-6 mb-8 text-[#6b5d4d] text-xs tracking-[0.3em] uppercase">
-                <span>Character Profile</span>
-                <span className="w-8 h-px bg-[#3d3529]" />
-                <span>《{book?.title}》</span>
+        <article className="character-article">
+          {/* Hero Section */}
+          <header className="character-hero">
+            <div className="character-hero-bg" />
+            <div className="character-hero-content">
+              <div className="character-hero-meta">
+                <span className="character-hero-label">人物志</span>
+                <span className="character-hero-divider" />
+                <span className="character-hero-book">{book?.title}</span>
               </div>
 
-              {/* Name */}
-              <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-light tracking-tight mb-6 leading-[0.9]">
-                {result.name}
-              </h1>
-
-              {/* Aliases & Stats */}
-              <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
+              <h1 className="character-hero-name">
+                <span className="character-hero-name-text">{result.name}</span>
                 {result.aliases && result.aliases.length > 0 && (
-                  <span className="text-[#8a7e70] italic font-display text-lg">
-                    {result.aliases.join('，')}
+                  <span className="character-hero-aliases">
+                    {result.aliases.join(' · ')}
                   </span>
                 )}
-                <span className="text-[#6b5d4d]">
-                  第 <span className="text-[#c9a55c]">{result.first_appearance + 1}</span> 章首次登场
-                </span>
-                <span className="text-[#6b5d4d]">
-                  共 <span className="text-[#c9a55c]">{result.total_chapters || result.appearances?.length || 0}</span> 章出场
-                </span>
+              </h1>
+
+              <div className="character-hero-stats">
+                <div className="character-stat">
+                  <span className="character-stat-value">第 {result.first_appearance + 1} 章</span>
+                  <span className="character-stat-label">首次登场</span>
+                </div>
+                <div className="character-stat-divider" />
+                <div className="character-stat">
+                  <span className="character-stat-value">{result.total_chapters || result.appearances?.length || 0} 章</span>
+                  <span className="character-stat-label">出场次数</span>
+                </div>
               </div>
             </div>
           </header>
 
-          {/* Summary - Pull Quote Style */}
+          {/* Summary - Large Pull Quote */}
           {result.summary && (
-            <section className="py-20 px-8 md:px-16 lg:px-24 border-b border-[#2a2520]">
-              <div className="max-w-4xl mx-auto">
-                <blockquote className="font-display text-2xl md:text-3xl lg:text-4xl font-light leading-relaxed text-[#c4b5a0] italic">
-                  <span className="text-[#c9a55c] not-italic">"</span>
+            <section id="summary" className="character-summary visible">
+              <div className="character-summary-inner">
+                <Quote className="character-summary-quote-icon" size={48} strokeWidth={1} />
+                <blockquote className="character-summary-text">
                   {result.summary}
-                  <span className="text-[#c9a55c] not-italic">"</span>
                 </blockquote>
               </div>
             </section>
           )}
 
-          {/* Main Content Grid */}
-          <div className="px-8 md:px-16 lg:px-24 py-16">
-            <div className="max-w-5xl mx-auto">
+          {/* Main Content */}
+          <div className="character-content">
+            {/* Growth Arc */}
+            {result.growth_arc && (
+              <section id="growth" className="character-section visible">
+                <SectionTitle number="01" title="成长轨迹" subtitle="Character Arc" />
+                <div className="character-growth">
+                  <p className="character-growth-text">
+                    <span className="character-growth-dropcap">{result.growth_arc[0]}</span>
+                    {result.growth_arc.slice(1)}
+                  </p>
+                </div>
+              </section>
+            )}
 
-              {/* Growth Arc */}
-              {result.growth_arc && (
-                <section className="mb-20">
-                  <SectionHeader number="01" title="成长轨迹" subtitle="Growth Arc" />
-                  <div className="md:columns-2 gap-12 text-[#b8a898] leading-[1.9] text-[1.0625rem]">
-                    <p className="first-letter:text-5xl first-letter:font-display first-letter:text-[#c9a55c] first-letter:float-left first-letter:mr-3 first-letter:leading-[0.8]">
-                      {result.growth_arc}
-                    </p>
-                  </div>
-                </section>
-              )}
-
-              {/* Core Traits */}
-              {result.core_traits && result.core_traits.length > 0 && (
-                <section className="mb-20">
-                  <SectionHeader number="02" title="性格剖析" subtitle="Character Traits" />
-                  <div className="space-y-12">
-                    {result.core_traits.map((trait, i) => (
-                      <div key={i} className="grid md:grid-cols-[200px_1fr] gap-6 md:gap-12">
-                        <div>
-                          <h3 className="font-display text-xl text-[#e8e0d4] mb-1">{trait.trait}</h3>
-                          <span className="text-[#6b5d4d] text-xs tracking-[0.2em] uppercase">Trait {String(i + 1).padStart(2, '0')}</span>
+            {/* Core Traits */}
+            {result.core_traits && result.core_traits.length > 0 && (
+              <section id="traits" className="character-section visible">
+                <SectionTitle number="02" title="性格剖析" subtitle="Personality" />
+                <div className="character-traits">
+                  {result.core_traits.map((trait, i) => (
+                    <div
+                      key={i}
+                      className="character-trait"
+                      style={{ animationDelay: `${i * 0.1}s` }}
+                    >
+                      <div className="character-trait-header">
+                        <span className="character-trait-index">{String(i + 1).padStart(2, '0')}</span>
+                        <h3 className="character-trait-name">{trait.trait}</h3>
+                      </div>
+                      <p className="character-trait-desc">{trait.description}</p>
+                      {trait.evidence && (
+                        <div className="character-trait-evidence">
+                          <Sparkles size={12} />
+                          <span>{Array.isArray(trait.evidence) ? trait.evidence[0] : trait.evidence}</span>
                         </div>
-                        <div>
-                          <p className="text-[#b8a898] leading-relaxed mb-4">{trait.description}</p>
-                          {trait.evidence && (
-                            <div className="pl-4 border-l border-[#3d3529] space-y-2">
-                              {(Array.isArray(trait.evidence) ? trait.evidence.slice(0, 2) : [trait.evidence]).map((e, j) => (
-                                <p key={j} className="text-sm text-[#7a6e60] leading-relaxed italic">
-                                  {e}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
-              {/* Strengths & Weaknesses */}
-              {((result.strengths?.length > 0) || (result.weaknesses?.length > 0)) && (
-                <section className="mb-20">
-                  <SectionHeader number="03" title="优缺点" subtitle="Strengths & Weaknesses" />
-                  <div className="grid md:grid-cols-2 gap-12 md:gap-16">
-                    {result.strengths?.length > 0 && (
-                      <div>
-                        <h4 className="text-xs tracking-[0.3em] uppercase text-[#6b8f71] mb-6 flex items-center gap-3">
-                          <span className="w-6 h-px bg-[#6b8f71]" />
-                          优点
-                        </h4>
-                        <ul className="space-y-4">
-                          {result.strengths.map((s, i) => (
-                            <li key={i} className="text-[#b8a898] leading-relaxed pl-4 border-l border-[#6b8f71]/30">
-                              {s}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {result.weaknesses?.length > 0 && (
-                      <div>
-                        <h4 className="text-xs tracking-[0.3em] uppercase text-[#a67c52] mb-6 flex items-center gap-3">
-                          <span className="w-6 h-px bg-[#a67c52]" />
-                          缺点
-                        </h4>
-                        <ul className="space-y-4">
-                          {result.weaknesses.map((w, i) => (
-                            <li key={i} className="text-[#b8a898] leading-relaxed pl-4 border-l border-[#a67c52]/30">
-                              {w}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </section>
-              )}
+            {/* Strengths & Weaknesses */}
+            {((result.strengths?.length > 0) || (result.weaknesses?.length > 0)) && (
+              <section id="balance" className="character-section visible">
+                <SectionTitle number="03" title="光与影" subtitle="Light & Shadow" />
+                <div className="character-balance">
+                  {result.strengths?.length > 0 && (
+                    <div className="character-balance-side character-balance-light">
+                      <h4 className="character-balance-title">
+                        <span className="character-balance-icon">✦</span>
+                        优点
+                      </h4>
+                      <ul className="character-balance-list">
+                        {result.strengths.map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {result.weaknesses?.length > 0 && (
+                    <div className="character-balance-side character-balance-shadow">
+                      <h4 className="character-balance-title">
+                        <span className="character-balance-icon">✧</span>
+                        缺点
+                      </h4>
+                      <ul className="character-balance-list">
+                        {result.weaknesses.map((w, i) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
-              {/* Notable Quotes */}
-              {result.notable_quotes?.length > 0 && (
-                <section className="mb-20">
-                  <SectionHeader number="04" title="经典语录" subtitle="Notable Quotes" />
-                  <div className="space-y-8">
-                    {result.notable_quotes.map((q, i) => (
-                      <blockquote
-                        key={i}
-                        className="relative pl-6 py-2 border-l-2 border-[#c9a55c]/40"
-                      >
-                        <p className="font-display text-xl md:text-2xl text-[#c4b5a0] italic leading-relaxed">
-                          「{q}」
-                        </p>
-                        <span className="absolute -left-[0.6rem] top-0 text-[#c9a55c] text-2xl font-display leading-none">"</span>
-                      </blockquote>
-                    ))}
-                  </div>
-                </section>
-              )}
+            {/* Notable Quotes */}
+            {result.notable_quotes?.length > 0 && (
+              <section id="quotes" className="character-section visible">
+                <SectionTitle number="04" title="经典语录" subtitle="Memorable Quotes" />
+                <div className="character-quotes">
+                  {result.notable_quotes.map((q, i) => (
+                    <blockquote
+                      key={i}
+                      className="character-quote"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    >
+                      <span className="character-quote-mark">"</span>
+                      <p className="character-quote-text">{q}</p>
+                      <span className="character-quote-mark character-quote-mark-end">"</span>
+                    </blockquote>
+                  ))}
+                </div>
+              </section>
+            )}
 
-              {/* Relations */}
-              {result.relations?.length > 0 && (
-                <section className="mb-20">
-                  <SectionHeader number="05" title="人物关系" subtitle="Relationships" />
-                  <div className="grid gap-6">
-                    {result.relations.map((rel, i) => (
+            {/* Relations */}
+            {result.relations?.length > 0 && (
+              <section id="relations" className="character-section visible">
+                <SectionTitle number="05" title="人物关系" subtitle="Relationships" />
+                <div className="character-relations">
+                  {result.relations.map((rel, i) => {
+                    const config = relationConfig[rel.relation_type] || { label: rel.relation_type, icon: Users, color: 'gray' }
+                    const Icon = config.icon
+                    return (
                       <div
                         key={i}
-                        className="group grid md:grid-cols-[180px_1fr] gap-4 md:gap-8 py-6 border-b border-[#2a2520] last:border-b-0"
+                        className={`character-relation character-relation-${config.color}`}
+                        style={{ animationDelay: `${i * 0.1}s` }}
                       >
-                        <div className="flex items-baseline gap-3">
-                          <span className="font-display text-2xl text-[#e8e0d4] group-hover:text-[#c9a55c] transition-colors">
-                            {rel.target_name}
-                          </span>
+                        <div className="character-relation-avatar">
+                          {rel.target_name[0]}
                         </div>
-                        <div className="flex flex-col gap-2">
-                          <span className="text-xs tracking-[0.2em] uppercase text-[#6b5d4d]">
-                            {relationLabels[rel.relation_type] || rel.relation_type}
-                          </span>
-                          <p className="text-[#8a7e70] leading-relaxed">
-                            {rel.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Appearances */}
-              {result.appearances?.length > 0 && (
-                <section className="mb-20">
-                  <SectionHeader
-                    number="06"
-                    title="章节出现"
-                    subtitle={`${result.appearances.length} Chapters`}
-                  />
-                  <div className="space-y-1">
-                    {result.appearances.map((app) => (
-                      <div key={app.chapter_index} className="border-b border-[#2a2520] last:border-b-0">
-                        <button
-                          className="w-full py-5 flex justify-between items-center text-left group"
-                          onClick={() =>
-                            setExpandedChapter(expandedChapter === app.chapter_index ? null : app.chapter_index)
-                          }
-                        >
-                          <div className="flex items-baseline gap-6">
-                            <span className="text-[#6b5d4d] text-sm tabular-nums w-8">
-                              {String(app.chapter_index + 1).padStart(2, '0')}
-                            </span>
-                            <span className="text-[#c4b5a0] group-hover:text-[#e8e0d4] transition-colors">
-                              {app.chapter_title}
+                        <div className="character-relation-content">
+                          <div className="character-relation-header">
+                            <span className="character-relation-name">{rel.target_name}</span>
+                            <span className="character-relation-type">
+                              <Icon size={12} />
+                              {config.label}
                             </span>
                           </div>
-                          {expandedChapter === app.chapter_index
-                            ? <ChevronUp size={16} className="text-[#c9a55c]" />
-                            : <ChevronDown size={16} className="text-[#6b5d4d] group-hover:text-[#8a7e70]" />
-                          }
+                          <p className="character-relation-desc">{rel.description}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Appearances Timeline */}
+            {result.appearances?.length > 0 && (
+              <section id="appearances" className="character-section visible">
+                <SectionTitle
+                  number="06"
+                  title={`章节足迹`}
+                  subtitle={`${result.appearances.length} Chapters`}
+                />
+                <div className="character-timeline">
+                  {result.appearances.map((app, i) => (
+                    <div
+                      key={app.chapter_index}
+                      className="character-timeline-item"
+                      style={{ animationDelay: `${i * 0.05}s` }}
+                    >
+                      <div className="character-timeline-marker">
+                        <span className="character-timeline-dot" />
+                        <span className="character-timeline-line" />
+                      </div>
+                      <div className="character-timeline-content">
+                        <button
+                          className={`character-timeline-header ${expandedChapter === app.chapter_index ? 'expanded' : ''}`}
+                          onClick={() => setExpandedChapter(
+                            expandedChapter === app.chapter_index ? null : app.chapter_index
+                          )}
+                        >
+                          <span className="character-timeline-chapter">
+                            {String(app.chapter_index + 1).padStart(2, '0')}
+                          </span>
+                          <span className="character-timeline-title">{app.chapter_title}</span>
+                          <ChevronRight
+                            size={16}
+                            className={`character-timeline-arrow ${expandedChapter === app.chapter_index ? 'rotated' : ''}`}
+                          />
                         </button>
+
                         {expandedChapter === app.chapter_index && (
-                          <div className="pb-6 pl-14 pr-4 space-y-6 animate-fade-in">
+                          <div className="character-timeline-details">
                             {app.events?.length > 0 && (
-                              <div>
-                                <p className="text-xs tracking-[0.2em] uppercase text-[#c9a55c] mb-3">事件</p>
-                                <ul className="space-y-2 text-[#8a7e70] text-sm leading-relaxed">
-                                  {app.events.map((e, i) => (
-                                    <li key={i} className="pl-3 border-l border-[#3d3529]">{e}</li>
+                              <div className="character-timeline-group">
+                                <h5>关键事件</h5>
+                                <ul>
+                                  {app.events.map((e, j) => (
+                                    <li key={j}>{e}</li>
                                   ))}
                                 </ul>
                               </div>
                             )}
                             {app.interactions?.length > 0 && (
-                              <div>
-                                <p className="text-xs tracking-[0.2em] uppercase text-[#a67c52] mb-3">互动</p>
-                                <ul className="space-y-2 text-[#8a7e70] text-sm leading-relaxed">
-                                  {app.interactions.map((e, i) => (
-                                    <li key={i} className="pl-3 border-l border-[#3d3529]">{e}</li>
+                              <div className="character-timeline-group">
+                                <h5>人物互动</h5>
+                                <ul>
+                                  {app.interactions.map((e, j) => (
+                                    <li key={j}>{e}</li>
                                   ))}
                                 </ul>
                               </div>
                             )}
                             {app.quote && (
-                              <blockquote className="pl-3 border-l-2 border-[#c9a55c]/40 font-display italic text-[#b8a898]">
+                              <blockquote className="character-timeline-quote">
                                 「{app.quote}」
                               </blockquote>
                             )}
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-            </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Footer */}
-          <footer className="border-t border-[#2a2520] py-16 px-8">
-            <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-[#6b5d4d] text-sm">
-              <div className="flex items-center gap-4">
-                <span className="text-xs tracking-[0.3em] uppercase">Book Insight</span>
-                <span className="w-8 h-px bg-[#3d3529]" />
-                <span>Literary Analysis</span>
-              </div>
-              <span>
-                《{book?.title}》· {result.name}
-              </span>
+          <footer className="character-footer">
+            <div className="character-footer-content">
+              <span className="character-footer-logo">Book Insight</span>
+              <span className="character-footer-divider">·</span>
+              <span>{book?.title}</span>
+              <span className="character-footer-divider">·</span>
+              <span>{result.name}</span>
             </div>
           </footer>
         </article>
@@ -397,14 +401,14 @@ export default function CharacterDetail() {
   )
 }
 
-// Section Header Component
-function SectionHeader({ number, title, subtitle }) {
+// Section Title Component
+function SectionTitle({ number, title, subtitle }) {
   return (
-    <div className="flex items-end gap-6 mb-10 pb-4 border-b border-[#2a2520]">
-      <span className="text-[#3d3529] font-display text-6xl leading-none">{number}</span>
-      <div className="pb-1">
-        <h2 className="font-display text-2xl text-[#e8e0d4] mb-1">{title}</h2>
-        <span className="text-[#6b5d4d] text-xs tracking-[0.3em] uppercase">{subtitle}</span>
+    <div className="character-section-title">
+      <div className="character-section-number">{number}</div>
+      <div className="character-section-text">
+        <h2>{title}</h2>
+        <span>{subtitle}</span>
       </div>
     </div>
   )

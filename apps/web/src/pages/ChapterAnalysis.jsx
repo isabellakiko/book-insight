@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Play, Loader2, CheckCircle, BookOpen, Users, Sparkles, Hash, Heart } from 'lucide-react'
+import { Play, Loader2, Check, BookOpen, Users, Sparkles, Hash, Heart } from 'lucide-react'
 import { booksApi, analysisApi } from '../services/api'
 import { clsx } from 'clsx'
 
@@ -51,23 +51,22 @@ export default function ChapterAnalysis() {
   const isAnalyzed = (index) => analyses.some((a) => a.chapter_index === index)
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full bg-surface">
       {/* Chapter list sidebar */}
-      <aside className="w-72 bg-paper-dark flex flex-col border-r border-paper-lighter/50">
+      <aside className="w-64 bg-surface-secondary flex flex-col border-r border-border">
         {/* Book info header */}
-        <div className="p-6 border-b border-paper-lighter/30">
-          <p className="chapter-number mb-1">Chapters</p>
-          <h2 className="font-display text-lg font-medium truncate">
+        <div className="p-4 border-b border-border">
+          <h2 className="font-medium text-text-primary truncate text-sm">
             {book?.title || '加载中...'}
           </h2>
-          <p className="text-sm text-[var(--text-muted)] mt-1">
+          <p className="text-xs text-text-muted mt-1">
             {chapters.length} 章 · {analyses.length} 已分析
           </p>
         </div>
 
         {/* Chapter list */}
-        <div className="flex-1 overflow-auto p-3">
-          <div className="space-y-1">
+        <div className="flex-1 overflow-auto p-2">
+          <div className="space-y-0.5">
             {chapters.map((chapter) => {
               const analyzed = isAnalyzed(chapter.index)
               const isSelected = selectedChapter === chapter.index
@@ -77,28 +76,25 @@ export default function ChapterAnalysis() {
                   key={chapter.index}
                   onClick={() => setSelectedChapter(chapter.index)}
                   className={clsx(
-                    'w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all duration-200',
+                    'w-full text-left px-3 py-2.5 rounded-lg flex items-center gap-2.5 transition-all',
                     isSelected
-                      ? 'bg-paper border border-gold/30'
-                      : 'hover:bg-paper/50'
+                      ? 'bg-accent-surface text-accent'
+                      : 'hover:bg-surface-tertiary text-text-secondary hover:text-text-primary'
                   )}
                 >
                   <span className={clsx(
-                    'w-6 h-6 rounded flex items-center justify-center flex-shrink-0 text-xs font-medium',
+                    'w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-xs',
                     analyzed
-                      ? 'bg-gold/20 text-gold'
-                      : 'bg-paper-lighter text-[var(--text-muted)]'
+                      ? 'bg-success/20 text-success'
+                      : 'bg-surface-tertiary text-text-muted'
                   )}>
                     {analyzed ? (
-                      <CheckCircle size={14} />
+                      <Check size={12} />
                     ) : (
-                      String(chapter.index + 1).padStart(2, '0')
+                      <span className="text-2xs">{chapter.index + 1}</span>
                     )}
                   </span>
-                  <span className={clsx(
-                    'truncate text-sm',
-                    isSelected ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'
-                  )}>
+                  <span className="truncate text-sm">
                     {chapter.title}
                   </span>
                 </button>
@@ -112,32 +108,32 @@ export default function ChapterAnalysis() {
       <div className="flex-1 flex">
         {selectedChapter === null ? (
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center animate-fade-in">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-paper flex items-center justify-center">
-                <BookOpen size={32} className="text-[var(--text-muted)]" strokeWidth={1.5} />
+            <div className="empty-state animate-fade-in">
+              <div className="w-16 h-16 rounded-2xl bg-surface-tertiary flex items-center justify-center mb-4">
+                <BookOpen size={28} className="text-text-muted" strokeWidth={1.5} />
               </div>
-              <h2 className="font-display text-xl mb-2">选择章节</h2>
-              <p className="text-[var(--text-muted)]">从左侧列表选择一个章节开始阅读</p>
+              <h2 className="empty-state-title">选择章节</h2>
+              <p className="empty-state-description">从左侧列表选择一个章节开始阅读</p>
             </div>
           </div>
         ) : (
           <>
             {/* Chapter content */}
             <div className="flex-1 overflow-auto">
-              <div className="max-w-3xl mx-auto px-8 py-8">
+              <div className="reading-container">
                 {/* Chapter header */}
-                <header className="mb-8">
-                  <p className="chapter-number mb-2">
+                <header className="mb-8 text-center">
+                  <span className="chapter-number">
                     Chapter {String(selectedChapter + 1).padStart(2, '0')}
-                  </p>
-                  <h1 className="font-display text-3xl font-semibold">
+                  </span>
+                  <h1 className="chapter-title mt-2">
                     {chapterContent?.title}
                   </h1>
                 </header>
 
                 {/* Chapter text */}
-                <article className="prose prose-lg">
-                  <div className="whitespace-pre-wrap text-[var(--text-secondary)] leading-[1.8] text-base">
+                <article className="reading">
+                  <div className="whitespace-pre-wrap leading-[1.9]">
                     {chapterContent?.content}
                   </div>
                 </article>
@@ -145,15 +141,15 @@ export default function ChapterAnalysis() {
             </div>
 
             {/* Analysis panel */}
-            <aside className="w-80 bg-paper border-l border-paper-lighter/50 overflow-auto">
-              <div className="p-6">
+            <aside className="w-72 bg-surface-secondary border-l border-border overflow-auto">
+              <div className="p-5">
                 {/* Panel header */}
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-display text-lg font-medium">分析</h3>
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="font-medium text-text-primary">分析</h3>
                   <button
                     onClick={() => analyzeMutation.mutate(selectedChapter)}
                     disabled={analyzeMutation.isPending}
-                    className="btn btn-primary text-sm py-2"
+                    className="btn btn-primary btn-sm"
                   >
                     {analyzeMutation.isPending ? (
                       <>
@@ -163,21 +159,21 @@ export default function ChapterAnalysis() {
                     ) : (
                       <>
                         <Play size={14} />
-                        <span>开始分析</span>
+                        <span>分析</span>
                       </>
                     )}
                   </button>
                 </div>
 
                 {selectedAnalysis ? (
-                  <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-5 animate-fade-in">
                     {/* Summary */}
                     <section>
-                      <h4 className="text-sm font-medium text-gold mb-2 flex items-center gap-2">
-                        <BookOpen size={14} />
+                      <h4 className="text-xs font-medium text-accent mb-2 flex items-center gap-1.5">
+                        <BookOpen size={12} />
                         章节摘要
                       </h4>
-                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                      <p className="text-sm text-text-secondary leading-relaxed">
                         {selectedAnalysis.summary}
                       </p>
                     </section>
@@ -185,13 +181,13 @@ export default function ChapterAnalysis() {
                     {/* Characters */}
                     {selectedAnalysis.characters?.length > 0 && (
                       <section>
-                        <h4 className="text-sm font-medium text-gold mb-2 flex items-center gap-2">
-                          <Users size={14} />
+                        <h4 className="text-xs font-medium text-accent mb-2 flex items-center gap-1.5">
+                          <Users size={12} />
                           登场人物
                         </h4>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                           {selectedAnalysis.characters.map((char) => (
-                            <span key={char} className="tag tag-muted text-xs">
+                            <span key={char} className="tag tag-default text-xs">
                               {char}
                             </span>
                           ))}
@@ -202,14 +198,14 @@ export default function ChapterAnalysis() {
                     {/* Events */}
                     {selectedAnalysis.events?.length > 0 && (
                       <section>
-                        <h4 className="text-sm font-medium text-gold mb-2 flex items-center gap-2">
-                          <Sparkles size={14} />
+                        <h4 className="text-xs font-medium text-accent mb-2 flex items-center gap-1.5">
+                          <Sparkles size={12} />
                           关键事件
                         </h4>
-                        <ul className="space-y-2">
+                        <ul className="space-y-1.5">
                           {selectedAnalysis.events.map((event, i) => (
-                            <li key={i} className="text-sm text-[var(--text-secondary)] flex items-start gap-2">
-                              <span className="text-copper mt-1 text-xs">●</span>
+                            <li key={i} className="text-sm text-text-secondary flex items-start gap-2">
+                              <span className="text-accent mt-1.5 text-xs">●</span>
                               <span>{event}</span>
                             </li>
                           ))}
@@ -220,11 +216,11 @@ export default function ChapterAnalysis() {
                     {/* Sentiment */}
                     {selectedAnalysis.sentiment && (
                       <section>
-                        <h4 className="text-sm font-medium text-gold mb-2 flex items-center gap-2">
-                          <Heart size={14} />
+                        <h4 className="text-xs font-medium text-accent mb-2 flex items-center gap-1.5">
+                          <Heart size={12} />
                           情感基调
                         </h4>
-                        <p className="text-sm text-[var(--text-secondary)]">
+                        <p className="text-sm text-text-secondary">
                           {selectedAnalysis.sentiment}
                         </p>
                       </section>
@@ -233,13 +229,13 @@ export default function ChapterAnalysis() {
                     {/* Keywords */}
                     {selectedAnalysis.keywords?.length > 0 && (
                       <section>
-                        <h4 className="text-sm font-medium text-gold mb-2 flex items-center gap-2">
-                          <Hash size={14} />
+                        <h4 className="text-xs font-medium text-accent mb-2 flex items-center gap-1.5">
+                          <Hash size={12} />
                           关键词
                         </h4>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                           {selectedAnalysis.keywords.map((kw) => (
-                            <span key={kw} className="tag tag-gold text-xs">
+                            <span key={kw} className="tag tag-accent text-xs">
                               {kw}
                             </span>
                           ))}
@@ -248,12 +244,10 @@ export default function ChapterAnalysis() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-paper-dark flex items-center justify-center">
-                      <Sparkles size={24} className="text-[var(--text-muted)]" strokeWidth={1.5} />
-                    </div>
-                    <p className="text-sm text-[var(--text-muted)]">
-                      点击「开始分析」<br />AI 将解析章节内容
+                  <div className="empty-state py-8">
+                    <Sparkles size={24} className="text-text-muted mb-3" strokeWidth={1.5} />
+                    <p className="text-sm text-text-muted text-center">
+                      点击「分析」按钮<br />AI 将解析章节内容
                     </p>
                   </div>
                 )}
