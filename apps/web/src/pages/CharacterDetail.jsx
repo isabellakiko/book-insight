@@ -43,11 +43,10 @@ export default function CharacterDetail() {
 
   useEffect(() => {
     if (name && currentBookId) {
-      loadCached(name).then((loaded) => {
-        if (!loaded) analyzeCharacter(name)
-      })
+      // 只加载缓存，不自动触发分析（分析通过脚本离线执行）
+      loadCached(name)
     }
-  }, [name, currentBookId, loadCached, analyzeCharacter])
+  }, [name, currentBookId, loadCached])
 
   if (!currentBookId) {
     return (
@@ -96,6 +95,16 @@ export default function CharacterDetail() {
           <X size={32} strokeWidth={1} />
           <h2>分析失败</h2>
           <p>{error}</p>
+        </div>
+      )}
+
+      {/* No Data */}
+      {!result && !error && status === 'completed' && (
+        <div className="cd-empty">
+          <BookOpen size={32} strokeWidth={1} />
+          <h2>暂无分析数据</h2>
+          <p>请先运行脚本分析该人物</p>
+          <code className="cd-code">python3 scripts/reanalyze_zhaoqin.py</code>
         </div>
       )}
 

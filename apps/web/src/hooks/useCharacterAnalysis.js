@@ -97,7 +97,8 @@ export function useCharacterAnalysis(bookId) {
       setStatus('searching')
       try {
         const data = await analysisApi.getDetailedCharacter(bookId, name)
-        if (data && data.analysis_status === 'completed') {
+        // 有 appearances 数据就认为缓存有效
+        if (data && data.appearances && data.appearances.length > 0) {
           setResult(data)
           setAppearances(data.appearances || [])
           setRelations(data.relations || [])
