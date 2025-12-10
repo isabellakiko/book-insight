@@ -50,14 +50,28 @@
 
 ---
 
-## 脚本索引
+## 统一 CLI 工具
 
-| 脚本 | 功能 | 使用方式 |
-|------|------|----------|
-| `reanalyze_zhaoqin.py` | 赵秦智能采样 | `python3 scripts/reanalyze_zhaoqin.py` |
-| `continue_zhaoqin_analysis.py` | 赵秦增量分析 | `python3 scripts/continue_zhaoqin_analysis.py` |
-| `analyze_zhaoqin_deep.py` | 赵秦深度分析 | `python3 scripts/analyze_zhaoqin_deep.py` |
-| `analyze_character.py` | 通用分析脚本 | 修改人物名后运行 |
+**脚本**: `scripts/analyze.py`
+
+```bash
+# 智能采样分析（新人物）
+python scripts/analyze.py 赵秦
+
+# 增量分析更多章节
+python scripts/analyze.py 赵秦 --continue --chapters 100
+
+# 查看人物分析状态
+python scripts/analyze.py 赵秦 --status
+
+# 批量分析多个人物
+python scripts/analyze.py 张成 赵秦 夏诗
+```
+
+**核心原则**：
+- 脚本只通过 HTTP 调用后端 API
+- 不直接访问文件系统
+- 所有业务逻辑在 API 层
 
 ---
 
@@ -65,9 +79,10 @@
 
 ```
 data/analysis/a04f9ba66252/
-├── characters.json              # 人物列表（简略）
-├── characters_detailed/         # 详细分析结果
-│   └── {hash}.json             # 按人物名 hash 命名
+├── characters.json              # 人物列表索引
+├── characters/                  # 详细分析结果
+│   └── {人物名}/               # 按人物名组织
+│       └── profile.json        # 完整人物档案
 └── chapters/                    # 章节分析（可选）
 ```
 

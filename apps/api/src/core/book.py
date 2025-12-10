@@ -273,74 +273,94 @@ class BookManager:
         )
 
     # ===== 详细人物分析存储方法 =====
+    # 统一使用新格式: characters/{name}/profile.json
 
     @classmethod
     def save_detailed_character(cls, book_id: str, character: DetailedCharacter) -> None:
-        """保存详细人物分析"""
-        analysis_dir = settings.analysis_dir / book_id / "characters_detailed"
-        analysis_dir.mkdir(parents=True, exist_ok=True)
+        """保存详细人物分析到 characters/{name}/profile.json"""
+        char_dir = settings.analysis_dir / book_id / "characters" / character.name
+        char_dir.mkdir(parents=True, exist_ok=True)
 
-        # 用人物名字的 hash 作为文件名
-        filename = hashlib.md5(character.name.encode()).hexdigest()[:12] + ".json"
-        file_path = analysis_dir / filename
-        file_path.write_text(
+        profile_path = char_dir / "profile.json"
+        profile_path.write_text(
             character.model_dump_json(indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
 
+        # 同步更新 characters.json 索引
+        cls._sync_character_index(book_id, character)
+
+    @classmethod
+    def _sync_character_index(cls, book_id: str, character: DetailedCharacter) -> None:
+        """同步更新 characters.json 索引"""
+        index_path = settings.analysis_dir / book_id / "characters.json"
+
+        # 读取现有索引
+        characters = []
+        if index_path.exists():
+            characters = json.loads(index_path.read_text(encoding="utf-8"))
+
+        # 查找并更新或添加
+        found = False
+        for i, c in enumerate(characters):
+            if c.get("name") == character.name:
+                characters[i] = {
+                    "name": character.name,
+                    "aliases": character.aliases,
+                    "description": character.description,
+                    "first_appearance": character.first_appearance,
+                    "role": character.role,
+                }
+                found = True
+                break
+
+        if not found:
+            characters.append({
+                "name": character.name,
+                "aliases": character.aliases,
+                "description": character.description,
+                "first_appearance": character.first_appearance,
+                "role": character.role,
+            })
+
+        # 保存索引
+        index_path.write_text(
+            json.dumps(characters, ensure_ascii=False, indent=2),
+            encoding="utf-8"
+        )
+
     @classmethod
     def get_detailed_character(cls, book_id: str, character_name: str) -> Optional[DetailedCharacter]:
-        """获取详细人物分析（优先从新格式 profile.json 读取）"""
-        # 新格式：characters/{name}/profile.json
-        new_dir = settings.analysis_dir / book_id / "characters" / character_name
-        profile_path = new_dir / "profile.json"
+        """获取详细人物分析"""
+        profile_path = settings.analysis_dir / book_id / "characters" / character_name / "profile.json"
 
-        if profile_path.exists():
-            data = json.loads(profile_path.read_text(encoding="utf-8"))
-            # 读取 appearances（如果 profile 中没有完整数据）
-            if not data.get("appearances"):
-                appearances_path = new_dir / "appearances_summary.json"
-                if appearances_path.exists():
-                    appearances_data = json.loads(appearances_path.read_text(encoding="utf-8"))
-                    data["appearances"] = appearances_data.get("appearances", [])
-            # 设置分析状态
+        if not profile_path.exists():
+            return None
+
+        data = json.loads(profile_path.read_text(encoding="utf-8"))
+
+        # 确保 analysis_status 字段存在
+        if "analysis_status" not in data:
             data["analysis_status"] = "completed"
-            return DetailedCharacter(**data)
 
-        # 旧格式：characters_detailed/{hash}.json
-        old_dir = settings.analysis_dir / book_id / "characters_detailed"
-        filename = hashlib.md5(character_name.encode()).hexdigest()[:12] + ".json"
-        file_path = old_dir / filename
-
-        if file_path.exists():
-            data = json.loads(file_path.read_text(encoding="utf-8"))
-            return DetailedCharacter(**data)
-
-        return None
+        return DetailedCharacter(**data)
 
     @classmethod
     def get_detailed_characters(cls, book_id: str) -> list[DetailedCharacter]:
         """获取所有详细人物分析"""
         characters = []
+        chars_dir = settings.analysis_dir / book_id / "characters"
 
-        # 新格式：遍历 characters/ 目录
-        new_dir = settings.analysis_dir / book_id / "characters"
-        if new_dir.exists():
-            for char_dir in new_dir.iterdir():
-                if char_dir.is_dir():
-                    profile_path = char_dir / "profile.json"
-                    if profile_path.exists():
-                        data = json.loads(profile_path.read_text(encoding="utf-8"))
+        if not chars_dir.exists():
+            return characters
+
+        for char_dir in chars_dir.iterdir():
+            if char_dir.is_dir():
+                profile_path = char_dir / "profile.json"
+                if profile_path.exists():
+                    data = json.loads(profile_path.read_text(encoding="utf-8"))
+                    if "analysis_status" not in data:
                         data["analysis_status"] = "completed"
-                        characters.append(DetailedCharacter(**data))
-
-        # 旧格式：遍历 characters_detailed/ 目录
-        old_dir = settings.analysis_dir / book_id / "characters_detailed"
-        if old_dir.exists():
-            existing_names = {c.name for c in characters}
-            for file_path in old_dir.glob("*.json"):
-                data = json.loads(file_path.read_text(encoding="utf-8"))
-                if data.get("name") not in existing_names:
                     characters.append(DetailedCharacter(**data))
 
         return characters
