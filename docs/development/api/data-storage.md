@@ -27,10 +27,10 @@ data/
 │       │   ├── 0000.json
 │       │   ├── 0001.json
 │       │   └── ...
-│       ├── characters.json      # 人物列表（简略）
-│       └── characters_detailed/ # 详细人物分析
-│           ├── {hash}.json
-│           └── ...
+│       ├── characters.json      # 人物列表索引
+│       └── characters/          # 详细人物分析（按人物名组织）
+│           └── {人物名}/
+│               └── profile.json
 │
 └── vector_store/                # 向量数据库
     └── {book_id}/               # ChromaDB 数据
@@ -181,9 +181,9 @@ data/books/那些热血飞扬的日子.txt
 | role | string | 角色类型：protagonist/antagonist/supporting/minor |
 | attributes | dict | 扩展属性 |
 
-### 详细人物分析（characters_detailed/{hash}.json）
+### 详细人物分析（characters/{name}/profile.json）
 
-文件名格式：`{md5(name)[:12]}.json`
+路径格式：`characters/{人物名}/profile.json`（直接使用人物名作为目录名）
 
 ```json
 {
@@ -292,7 +292,7 @@ BookManager.save_detailed_character(book_id, detailed_character)
 |------|------|------|
 | 章节文件 | `{index+1:04d}.json` | `0001.json`, `0100.json` |
 | 章节分析 | `{index:04d}.json` | `0000.json`, `0099.json` |
-| 人物详情 | `{md5(name)[:12]}.json` | `a1b2c3d4e5f6.json` |
+| 人物详情 | `{人物名}/profile.json` | `赵秦/profile.json` |
 
 > 注意：章节文件从 `0001` 开始，分析文件从 `0000` 开始
 

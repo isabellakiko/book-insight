@@ -126,12 +126,16 @@ data/analysis/{book_id}/characters/{name}/
 
 位于 `scripts/` 目录：
 
-| 脚本 | 功能 | 用法 |
-|------|------|------|
-| `reanalyze_zhaoqin.py` | 智能采样分析（覆盖全书） | `python3 scripts/reanalyze_zhaoqin.py` |
-| `continue_zhaoqin_analysis.py` | 增量分析更多章节 | `python3 scripts/continue_zhaoqin_analysis.py` |
-| `analyze_zhaoqin_deep.py` | 深度分析（总结、成长） | `python3 scripts/analyze_zhaoqin_deep.py` |
-| `analyze_character.py` | 通用人物分析脚本 | 需修改人物名后运行 |
+**统一 CLI**: `scripts/analyze.py`
+
+```bash
+python scripts/analyze.py 赵秦              # 智能采样分析
+python scripts/analyze.py 赵秦 --continue   # 增量分析更多章节
+python scripts/analyze.py 赵秦 --status     # 查看分析状态
+python scripts/analyze.py 张成 赵秦 夏诗    # 批量分析多人物
+```
+
+**核心原则**: 脚本只通过 HTTP 调用 API，不直接访问文件系统
 
 ### 分析流程
 1. 运行分析脚本（调用后端 API）

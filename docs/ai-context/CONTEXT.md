@@ -149,7 +149,7 @@ pnpm dev:api   # 后端 :8000
 ┌─────────────────────────────────────────────────────────────┐
 │                      分析脚本 (scripts/)                      │
 ├─────────────────────────────────────────────────────────────┤
-│  reanalyze_zhaoqin.py  │  continue_*.py  │  analyze_*.py    │
+│  analyze.py - 统一 CLI（智能采样/增量分析/状态查看/批量）      │
 │                         ↓ 调用 API                           │
 └─────────────────────────│───────────────────────────────────┘
                           │
@@ -220,9 +220,10 @@ book-insight/
 │           ├── utils/        # 工具模块 (validators, logger)
 │           └── core/         # 核心逻辑
 ├── scripts/                  # 分析脚本（离线执行）
-│   ├── reanalyze_zhaoqin.py  # 智能采样分析
-│   ├── continue_*.py         # 增量分析
-│   └── analyze_*.py          # 深度分析
+│   ├── analyze.py            # 统一 CLI（只调用 API）
+│   ├── migrate_data.py       # 数据迁移工具
+│   └── lib/                  # 脚本公共库
+│       └── api_client.py     # HTTP/SSE 客户端
 ├── data/
 │   ├── books/                # 书籍原始文件 (.txt)
 │   │   └── {book_id}/

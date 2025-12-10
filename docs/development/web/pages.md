@@ -111,13 +111,14 @@ window.open(`/characters/${encodeURIComponent(name)}`, '_blank')
 ### 数据来源
 分析数据通过脚本离线生成，存储在：
 ```
-data/analysis/{book_id}/characters_detailed/{hash}.json
+data/analysis/{book_id}/characters/{人物名}/profile.json
 ```
 
-**分析脚本**（位于 `scripts/` 目录）：
+**分析脚本**（统一 CLI）：
 ```bash
-python3 scripts/reanalyze_zhaoqin.py      # 智能采样分析
-python3 scripts/continue_zhaoqin_analysis.py  # 增量分析
+python scripts/analyze.py 赵秦              # 智能采样分析
+python scripts/analyze.py 赵秦 --continue   # 增量分析
+python scripts/analyze.py 赵秦 --status     # 查看状态
 ```
 
 ### URL 参数

@@ -159,7 +159,7 @@ Editorial 杂志风格设计：
 - ✅ 移除 CharacterDetail 自动触发分析
 - ✅ 前端只加载缓存数据，不实时分析
 - ✅ 新增"暂无分析数据"空状态 UI
-- ✅ 创建 `scripts/reanalyze_zhaoqin.py` 分析脚本
+- ✅ 创建统一分析 CLI `scripts/analyze.py`
 
 **提交记录**：
 - `4ad3d90` - 深度排查修复（P0/P1/P2）

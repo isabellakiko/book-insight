@@ -14,7 +14,7 @@
 | Chapter | 章节结构 | 内存（解析时使用） |
 | ChapterAnalysis | 章节分析结果 | `analysis/{book_id}/chapters/` |
 | Character | 人物简要信息 | `analysis/{book_id}/characters.json` |
-| DetailedCharacter | 人物详细分析 | `analysis/{book_id}/characters_detailed/` |
+| DetailedCharacter | 人物详细分析 | `analysis/{book_id}/characters/{name}/` |
 | CharacterAppearance | 人物章节出现 | 嵌套在 DetailedCharacter |
 | CharacterRelation | 人物关系 | 嵌套在 DetailedCharacter |
 | CharacterSearchResult | 人物搜索结果 | API 响应（不存储） |
