@@ -121,6 +121,28 @@ echo "实际 hook 文件："
 ls apps/web/src/hooks/*.js 2>/dev/null | wc -l
 ```
 
+### 深度同步建议
+
+当发现不同步时，执行以下操作：
+
+1. **API 端点不匹配**
+   - 使用 Grep 搜索所有 `@router` 装饰器
+   - 对比 routers.md 中的端点列表
+   - 建议：`grep -r "@router\." apps/api/src/routers/`
+
+2. **Store 文件不匹配**
+   - 检查 stores.md 的 Store 概览表格
+   - 验证每个 .js 文件都有对应文档
+   - 建议：补充缺失的 Store 文档
+
+3. **新组件未文档化**
+   - 检查 components/ 目录是否有新文件
+   - 建议：在 stores.md 或 pages.md 中补充说明
+
+4. **自动修复**
+   - 询问用户是否执行文档更新
+   - 使用 Edit 工具直接修正文档
+
 ## Step 6: 生成报告
 
 ```
