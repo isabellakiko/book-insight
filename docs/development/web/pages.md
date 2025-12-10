@@ -4,7 +4,7 @@
 
 **位置**: `apps/web/src/pages/`
 **框架**: React 18 + Vite
-**最后更新**: 2025-12-09
+**最后更新**: 2025-12-10
 
 ---
 
@@ -131,6 +131,74 @@ function CharacterDetail() {
 
 function SectionHeader({ number, title, subtitle }) {
   // 编号式标题组件（01 成长轨迹 Growth Arc）
+}
+```
+
+---
+
+## useCharacterAnalysis Hook
+
+**位置**: `apps/web/src/hooks/useCharacterAnalysis.js`
+
+用于人物按需分析的 SSE 流式 Hook，CharacterDetail 页面核心依赖。
+
+### 状态
+
+| 状态 | 类型 | 描述 |
+|------|------|------|
+| status | string | 分析状态：idle/searching/analyzing/completed/error |
+| searchResult | object | 搜索结果：{ name, found_in_chapters, total_mentions } |
+| appearances | array | 章节出场详情数组（逐步累积） |
+| relations | array | 人物关系数组 |
+| result | object | 最终分析结果（完整人物档案） |
+| error | string | 错误信息 |
+| progress | number | 分析进度 0-100 |
+
+### 方法
+
+| 方法 | 参数 | 描述 |
+|------|------|------|
+| analyzeCharacter | name: string | 触发 SSE 流式分析 |
+| loadCached | name: string | 加载已缓存的分析结果 |
+| cancel | - | 取消当前分析 |
+| reset | - | 重置所有状态 |
+
+### SSE 事件类型
+
+| 事件 | 数据 | 描述 |
+|------|------|------|
+| search_complete | { name, found_in_chapters, total_mentions } | 搜索完成 |
+| chapter_analyzed | { chapter_index, appearance } | 单章分析完成 |
+| chapter_error | { chapter_index, error } | 单章分析失败 |
+| relations_analyzed | { relations } | 关系分析完成 |
+| completed | { profile, appearances, relations } 或 { error } | 全部完成 |
+
+### 使用示例
+
+```jsx
+import { useCharacterAnalysis } from '../hooks/useCharacterAnalysis'
+
+function CharacterDetail({ bookId, name }) {
+  const {
+    status,
+    progress,
+    result,
+    error,
+    analyzeCharacter,
+    loadCached
+  } = useCharacterAnalysis(bookId)
+
+  useEffect(() => {
+    // 优先加载缓存，无缓存则触发分析
+    loadCached(name).then(cached => {
+      if (!cached) analyzeCharacter(name)
+    })
+  }, [name])
+
+  if (status === 'analyzing') {
+    return <ProgressBar value={progress} />
+  }
+  // ...
 }
 ```
 
