@@ -34,14 +34,17 @@ echo "当前时间: $(date +%Y-%m-%d) $(date +%H:%M) (第 $(date +%V) 周)"
 ## Step 3: 根据参数读取额外文档
 
 ### --full 模式
+- `docs/development/ARCHITECTURE.md`
 - `docs/development/api/routers.md`
 - `docs/development/api/ai-tasks.md`
 - `docs/development/web/pages.md`
 - `docs/development/web/stores.md`
+- `docs/development/web/hooks.md`
 
 ### --web 模式
 - `docs/development/web/pages.md`
 - `docs/development/web/stores.md`
+- `docs/development/web/hooks.md`
 
 ### --api 模式
 - `docs/development/api/routers.md`
@@ -72,7 +75,9 @@ echo "当前时间: $(date +%Y-%m-%d) $(date +%H:%M) (第 $(date +%V) 周)"
 ## 读取的文档
 - [x] CONTEXT.md (~2500 tokens)
 - [x] CURRENT.md (~2400 tokens)
-- [根据参数列出]
+- [--full 模式额外读取: ARCHITECTURE.md, routers.md, ai-tasks.md, pages.md, stores.md, hooks.md]
+- [--web 模式额外读取: pages.md, stores.md, hooks.md]
+- [--api 模式额外读取: routers.md, ai-tasks.md]
 
 ## 开发建议
 

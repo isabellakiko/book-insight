@@ -119,6 +119,8 @@ ls apps/web/src/stores/*.js 2>/dev/null | wc -l
 echo "=== Hooks 同步检查 ==="
 echo "实际 hook 文件："
 ls apps/web/src/hooks/*.js 2>/dev/null | wc -l
+echo "文档中记录的 Hooks："
+grep -c "^## " docs/development/web/hooks.md 2>/dev/null || echo "hooks.md 不存在"
 ```
 
 ### 深度同步建议
@@ -135,9 +137,10 @@ ls apps/web/src/hooks/*.js 2>/dev/null | wc -l
    - 验证每个 .js 文件都有对应文档
    - 建议：补充缺失的 Store 文档
 
-3. **新组件未文档化**
-   - 检查 components/ 目录是否有新文件
-   - 建议：在 stores.md 或 pages.md 中补充说明
+3. **新 Hook 未文档化**
+   - 检查 hooks/ 目录是否有新文件
+   - 验证每个 .js 文件在 hooks.md 中有对应章节
+   - 建议：补充缺失的 Hook 文档
 
 4. **自动修复**
    - 询问用户是否执行文档更新
