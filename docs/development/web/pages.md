@@ -84,9 +84,10 @@ function Characters() {
 ```
 
 ### 跳转方式
-使用 `window.open()` 在新标签页打开人物详情：
+使用 `useNavigate()` 在当前页面导航到人物详情：
 ```javascript
-window.open(`/characters/${encodeURIComponent(name)}`, '_blank')
+const navigate = useNavigate()
+navigate(`/characters/${encodeURIComponent(name)}`)
 ```
 
 ---

@@ -63,17 +63,43 @@ class CharacterAppearance(BaseModel):
     is_mentioned_only: bool = False   # True = 仅被提及，无实际出场（events 和 interactions 均为空）
 
 
+# ===== 增强版模型 V2 =====
+
+class RelationshipPhase(BaseModel):
+    """关系发展阶段"""
+    phase_name: str                   # "初识"、"冲突"、"和解"
+    chapter_range: list[int] = []     # [起始章节, 结束章节]
+    description: str = ""             # 阶段描述
+    key_event: str = ""               # 该阶段最关键的事件
+    sentiment_shift: str = ""         # 情感变化（敌对→中立→友善）
+
+
+class KeyMoment(BaseModel):
+    """关键互动时刻"""
+    chapter_index: int
+    chapter_title: str = ""
+    description: str                  # 发生了什么
+    significance: str = ""            # 为什么重要
+    quote: str | None = None          # 相关台词
+
+
 class CharacterRelation(BaseModel):
     """人物关系"""
     target_name: str                  # 关系对象
     relation_type: str                # friend/enemy/lover/family/mentor/rival/complex
     description: str                  # 关系描述（基于客观行为）
     evidence_chapters: list[int] = [] # 证据章节
-    # 新增：关系分析增强
+    # 关系分析增强
     objective_basis: str = ""         # 客观判断依据（具体行为/对话）
     first_interaction_chapter: int = -1  # 首次互动章节
     relation_evolution: str = ""      # 关系演变简述（如有变化）
     confidence: str = "medium"        # 判断可信度：high/medium/low
+    # V2 新增：详细发展历程
+    development_phases: list[RelationshipPhase] = []  # 关系发展时间线
+    key_moments: list[KeyMoment] = []                 # 关键互动时刻（3-5个）
+    shared_experiences: list[str] = []                # 共同经历
+    conflict_points: list[str] = []                   # 矛盾/冲突点
+    current_status: str = ""                          # 当前关系状态
 
 
 class CharacterSearchResult(BaseModel):
@@ -91,6 +117,27 @@ class CharacterTrait(BaseModel):
     evidence: list[str] | str = []   # 支撑证据
 
 
+class GrowthPhase(BaseModel):
+    """成长阶段"""
+    phase_name: str                   # "初遇张成"、"冲突与误解"、"情感转折"
+    chapter_range: list[int] = []     # [起始章节, 结束章节]
+    summary: str = ""                 # 阶段描述（200-400字）
+    key_events: list[str] = []        # 关键事件（5-10 个）
+    character_state: str = ""         # 该阶段人物状态
+    turning_point: str | None = None  # 转折点描述
+    emotional_arc: str = ""           # 情感变化（如：警惕→接纳→依恋）
+
+
+class Quote(BaseModel):
+    """经典语录"""
+    content: str                      # 语录内容
+    chapter_index: int                # 出处章节
+    chapter_title: str = ""           # 章节标题
+    context: str = ""                 # 场景简述（20-50字）
+    tags: list[str] = []              # 情感标签 ["爱情", "坚定", "温柔"]
+    significance: str = ""            # 语录意义（为什么经典）
+
+
 class DetailedCharacter(BaseModel):
     """详细人物分析结果"""
     name: str
@@ -101,13 +148,20 @@ class DetailedCharacter(BaseModel):
     role: str = "unknown"            # protagonist/antagonist/supporting/minor
     personality: list[str] = []      # 性格特点（简单列表）
 
-    # 新增：深度性格分析
+    # 深度性格分析
     summary: str = ""                # 一句话总结
-    growth_arc: str = ""             # 成长轨迹
+    growth_arc: str = ""             # 成长轨迹（兼容 V1）
     core_traits: list[CharacterTrait] = []  # 核心性格特征（带证据）
     strengths: list[str] = []        # 优点
     weaknesses: list[str] = []       # 缺点
-    notable_quotes: list[str] = []   # 经典语录
+    notable_quotes: list[str] = []   # 经典语录（兼容 V1）
+
+    # V2 增强字段
+    growth_phases: list["GrowthPhase"] = []   # 成长阶段时间线（替代 growth_arc）
+    quotes: list["Quote"] = []                # 结构化语录（替代 notable_quotes）
+    character_arc_summary: str = ""           # 人物弧光总结（300-500字）
+    core_conflicts: list[str] = []            # 核心矛盾/困境
+    defining_moments: list["KeyMoment"] = []  # 定义性时刻（5-8个）
 
     # 出现章节
     appearances: list[CharacterAppearance] = []

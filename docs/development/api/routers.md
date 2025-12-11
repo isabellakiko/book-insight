@@ -257,9 +257,18 @@ curl http://localhost:8000/api/health
 ```json
 {
   "name": "张成",
-  "max_chapters": 30
+  "max_chapters": 100
 }
 ```
+
+**参数说明**:
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|-------|------|
+| name | string | (必填) | 人物名称 |
+| max_chapters | int | 30 | 采样章节数（⚠️ 当前默认值过小，计划提升至 100） |
+
+> **注意**: 当前 `max_chapters=30` 会导致只分析均匀采样的 30 章，影响数据完整性。
+> 建议手动指定较大值：`"max_chapters": 100` 或更高。
 
 **响应**: `DetailedCharacter` 对象（见下方）
 

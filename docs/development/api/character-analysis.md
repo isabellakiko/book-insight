@@ -178,6 +178,47 @@ python scripts/analyze.py 赵秦 --continue --chapters 50 --refresh-summary
 
 ---
 
+## 分析参数配置
+
+### 当前默认值（2025-12-11 更新）
+
+| 参数 | 值 | 说明 |
+|------|-------|------|
+| max_chapters | 100 | 初始分析采样章节数 |
+| 成长阶段展示 | 150 章 | 给 AI 分析的章节数据 |
+| 语录原始提取 | 80 条 | 原始语录池 |
+| 语录最终返回 | 50 条 | 最终返回的语录数量 |
+| 关系人物数 | 20 人 | 分析的关系人物数 |
+| 每人互动数 | 15 次 | 每段关系展示的互动次数 |
+| 性格事件数 | 50 个 | 性格分析样本事件数 |
+| 性格台词数 | 15 条 | 性格分析样本台词数 |
+| 定义性时刻 | 15 个 | 关键时刻数量 |
+
+### 代码位置
+
+| 配置 | 文件 | 行号 |
+|------|------|------|
+| max_chapters | `routers/analysis.py` | 39 |
+| 成长阶段展示 | `ai/tasks/character_analyzer.py` | 235 |
+| 语录原始提取 | `ai/tasks/character_analyzer.py` | 348 |
+| 语录最终返回 | `ai/tasks/character_analyzer.py` | 405 |
+| 关系人物数 | `ai/tasks/character_analyzer.py` | 451 |
+| 每人互动数 | `ai/tasks/character_analyzer.py` | 453 |
+| 性格事件数 | `ai/tasks/character_analyzer.py` | 641 |
+| 性格台词数 | `ai/tasks/character_analyzer.py` | 644 |
+| 定义性时刻 | `ai/tasks/character_analyzer.py` | 854 |
+
+### 分析策略建议
+
+| 策略 | 命令 | 耗时 | 适用场景 |
+|------|------|------|---------|
+| 快速预览 | `--chapters 30` | 5-10分钟 | 快速了解人物 |
+| 标准分析 | 默认 (100) | 15-25分钟 | 日常使用 |
+| 深度分析 | `--chapters 300` | 45-60分钟 | 重要人物 |
+| 全量分析 | 增量模式逐步覆盖 | 数小时 | 核心主角 |
+
+---
+
 ## 最佳实践
 
 ### 1. 分析计划
