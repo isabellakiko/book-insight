@@ -175,10 +175,14 @@ export default function CharacterDetail() {
                         <h3 className="cd-trait-name">{trait.trait}</h3>
                         <p className="cd-trait-desc">{trait.description}</p>
                         {trait.evidence && (
-                          <p className="cd-trait-evidence">
-                            <Sparkles size={12} />
-                            {Array.isArray(trait.evidence) ? trait.evidence[0] : trait.evidence}
-                          </p>
+                          <div className="cd-trait-evidence">
+                            {Array.isArray(trait.evidence)
+                              ? trait.evidence.map((e, j) => (
+                                  <p key={j}><Sparkles size={12} /> {e}</p>
+                                ))
+                              : <p><Sparkles size={12} /> {trait.evidence}</p>
+                            }
+                          </div>
                         )}
                       </div>
                     ))}

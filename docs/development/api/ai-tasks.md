@@ -12,11 +12,10 @@
 ```
 apps/api/src/ai/
 ├── __init__.py
-├── client.py          # AI 客户端（阿里云百炼）
+├── client.py              # AI 客户端（阿里云百炼）
 └── tasks/
     ├── __init__.py
-    ├── chapter.py     # 章节分析任务
-    └── character.py   # 人物提取任务
+    ├── chapter.py         # 章节分析任务
     └── character_analyzer.py  # 人物按需分析（SSE）
 ```
 
@@ -89,54 +88,6 @@ result = await analyzer.analyze(
 - 自动处理超长内容（>30000字符时截断）
 - 使用 JSON 模式确保结构化输出
 - 采用专业小说分析系统提示
-
----
-
-## 人物提取（character.py）
-
-### 功能
-从书籍内容中提取人物信息：
-- 人物名称和别名
-- 人物描述（50-100字）
-- 角色类型分类
-- 首次出场章节
-
-### 调用示例
-```python
-from src.ai.tasks.character import CharacterExtractor
-
-extractor = CharacterExtractor()
-result = await extractor.extract(
-    book=book_object,
-    sample_chapters=[0, 5, 10, 15, 20]  # 可选，默认自动采样
-)
-```
-
-### 返回格式（Character 列表）
-```python
-{
-    "characters": [
-        {
-            "id": "唯一ID",
-            "name": "人物姓名",
-            "aliases": ["别名1", "别名2"],
-            "description": "人物简介（50-100字）",
-            "role": "protagonist|antagonist|supporting|minor",
-            "first_appearance": 0
-        }
-    ]
-}
-```
-
-### 智能采样策略
-默认自动采样关键章节：
-- 开头章节
-- 四分之一处
-- 中点章节
-- 四分之三处
-- 结尾章节
-
-每个章节内容限制在 5000 字符以内。
 
 ---
 
