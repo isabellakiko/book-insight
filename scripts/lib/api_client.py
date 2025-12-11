@@ -76,12 +76,22 @@ class APIClient:
         book_id: str,
         name: str,
         additional_chapters: int = 100,
+        refresh_summary: bool = False,
         timeout: int = 600
     ) -> Generator[SSEEvent, None, None]:
-        """继续分析更多章节（SSE）"""
+        """继续分析更多章节（SSE）
+
+        Args:
+            book_id: 书籍 ID
+            name: 人物名称
+            additional_chapters: 要分析的章节数
+            refresh_summary: 是否刷新总结字段
+            timeout: 超时时间（秒）
+        """
         encoded_name = urllib.parse.quote(name)
         url = f"{self.base_url}/api/analysis/{book_id}/characters/continue"
         url += f"?name={encoded_name}&additional_chapters={additional_chapters}"
+        url += f"&refresh_summary={str(refresh_summary).lower()}"
         yield from self._sse_request(url, timeout)
 
     # ===== 内部方法 =====

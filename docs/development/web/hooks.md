@@ -146,7 +146,9 @@ function CharacterAnalyzer({ bookId }) {
 | `search_complete` | `{ name, found_in_chapters, total_mentions }` | 搜索完成 |
 | `chapter_analyzed` | `{ chapter_index, appearance }` | 单章分析完成 |
 | `chapter_error` | `{ chapter_index, error }` | 单章分析失败 |
+| `personality_analyzed` | `{ personality, role, description }` | 性格分析完成 |
 | `relations_analyzed` | `{ relations }` | 关系分析完成 |
+| `deep_profile_analyzed` | `{ summary, growth_arc, ... }` | 深度分析完成 |
 | `completed` | `DetailedCharacter` | 全部完成 |
 
 ### 内部实现

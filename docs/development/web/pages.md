@@ -97,14 +97,15 @@ window.open(`/characters/${encodeURIComponent(name)}`, '_blank')
 - 全屏独立布局（无侧边栏）
 - **纯展示模式**：只读取已有分析数据，不触发实时 AI 分析
 - 展示人物完整档案：
-  - 基础信息（名字、别名、首次出场、出场章数）
+  - 基础信息（名字、别名、首次出场、出场章数、覆盖率）
   - 人物概述（Summary）
   - 成长轨迹（Growth Arc）
-  - 性格剖析（Core Traits）
+  - 性格剖析（Core Traits - 带证据）
   - 优点 / 缺点
   - 经典语录
-  - 人物关系
-  - 章节出现（可展开查看事件、互动、台词）
+  - 人物关系（9种类型：friend/enemy/lover/family/mentor/student/rival/partner/complex）
+  - 关联人物（discovered_characters - 分析过程中发现的相关人物）
+  - 章节出现（可展开查看：事件、结构化互动、台词、关键时刻、情感状态）
 - 无数据时显示"暂无分析数据"提示
 - 浮动关闭按钮
 

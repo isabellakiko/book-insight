@@ -277,11 +277,13 @@ curl http://localhost:8000/api/health
 
 | 事件名 | 数据结构 | 说明 |
 |--------|----------|------|
-| `search_complete` | `CharacterSearchResult` | 搜索完成 |
+| `search_complete` | `CharacterSearchResult` | 搜索完成，返回出现章节列表 |
 | `chapter_analyzed` | `{chapter_index, appearance}` | 单章分析完成 |
 | `chapter_error` | `{chapter_index, error}` | 单章分析出错 |
+| `personality_analyzed` | `{personality, role, description}` | 性格分析完成 |
 | `relations_analyzed` | `{relations}` | 关系分析完成 |
-| `completed` | `DetailedCharacter` | 全部完成 |
+| `deep_profile_analyzed` | `{summary, growth_arc, ...}` | 深度分析完成 |
+| `completed` | `DetailedCharacter` | 全部完成，返回完整人物档案 |
 
 **前端使用示例**:
 ```javascript
@@ -304,6 +306,40 @@ eventSource.addEventListener('completed', (e) => {
   console.log('分析完成:', character);
   eventSource.close();
 });
+```
+
+### GET /api/analysis/{book_id}/characters/continue
+**描述**: 增量分析人物（SSE 流式，从已分析章节继续）
+
+**查询参数**:
+| 参数 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| name | string | - | 人物名称（必需） |
+| additional_chapters | int | 30 | 本次增量分析的章节数 |
+| refresh_summary | bool | false | 分析完成后是否刷新总结 |
+
+**响应**: Server-Sent Events (SSE) 流
+
+**事件类型**:
+
+| 事件名 | 数据结构 | 说明 |
+|--------|----------|------|
+| `status` | `{analyzed, total, message}` | 初始状态 |
+| `chapter_analyzed` | `{chapter_index, appearance, progress}` | 单章分析完成 |
+| `chapter_error` | `{chapter_index, error}` | 单章分析出错 |
+| `personality_analyzed` | `{personality}` | 性格分析完成 |
+| `relations_analyzed` | `{relations}` | 关系分析完成 |
+| `deep_profile_analyzed` | `{profile}` | 深度分析完成 |
+| `summary_skipped` | `{message}` | 总结刷新跳过 |
+| `completed` | `DetailedCharacter` | 全部完成 |
+
+**使用示例**:
+```bash
+# 增量分析 50 章
+curl "http://localhost:8000/api/analysis/{book_id}/characters/continue?name=赵秦&additional_chapters=50"
+
+# 增量分析并刷新总结
+curl "http://localhost:8000/api/analysis/{book_id}/characters/continue?name=赵秦&additional_chapters=50&refresh_summary=true"
 ```
 
 ### GET /api/analysis/{book_id}/characters/detailed

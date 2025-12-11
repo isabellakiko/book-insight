@@ -259,8 +259,16 @@ async def continue_analyze_character_stream(
     book_id: str,
     name: str,
     additional_chapters: int = 30,
+    refresh_summary: bool = False,
 ):
-    """继续分析人物更多章节（SSE 流式）"""
+    """继续分析人物更多章节（SSE 流式）
+
+    Args:
+        book_id: 书籍 ID
+        name: 人物名称
+        additional_chapters: 要继续分析的章节数
+        refresh_summary: 是否刷新总结字段（默认 False，只分析新章节）
+    """
     # FIXED: 添加输入验证
     name = validate_character_name(name)
 
@@ -277,7 +285,9 @@ async def continue_analyze_character_stream(
         analyzer = CharacterOnDemandAnalyzer()
         result = None
 
-        async for event in analyzer.analyze_continue(book, existing, additional_chapters):
+        async for event in analyzer.analyze_continue(
+            book, existing, additional_chapters, refresh_summary
+        ):
             event_type = event["event"]
             data = json.dumps(event["data"], ensure_ascii=False)
             yield f"event: {event_type}\ndata: {data}\n\n"

@@ -35,21 +35,45 @@ class Character(BaseModel):
 
 # ===== 新的人物按需分析模型 =====
 
+class CharacterInteraction(BaseModel):
+    """人物互动记录（结构化）"""
+    character: str                    # 互动对象姓名
+    type: str = "interaction"         # dialogue/conflict/cooperation/support/observation
+    description: str = ""             # 具体互动内容
+    sentiment: str = "neutral"        # positive/neutral/negative - 互动的情感基调
+    initiated_by: str = ""            # 谁发起：target/other/mutual
+
+
 class CharacterAppearance(BaseModel):
     """人物在某章节的出现信息"""
     chapter_index: int
     chapter_title: str
-    events: list[str] = []          # 该章节中涉及此人物的事件
-    interactions: list[str] = []     # 与其他角色的互动
-    quote: str = ""                  # 代表性台词或描述
+    # 基础信息
+    events: list[str] = []            # 该人物参与的事件（最多5个）
+    interactions: list[CharacterInteraction] = []  # 结构化互动记录
+    quote: str = ""                   # 该人物的代表性台词（原话）
+    # 第一人称视角分析
+    narrator_bias: str = ""           # 张成对该人物态度：positive/neutral/negative/unclear
+    # 章节分析
+    emotional_state: str = ""         # 该人物在本章的情感/心理状态
+    chapter_significance: str = ""    # 本章对人物发展的重要性：low/medium/high
+    mentioned_characters: list[str] = []  # 本章中与该人物相关的所有人物
+    key_moment: str = ""              # 本章最能体现该人物的关键时刻
+    # 出场类型标记
+    is_mentioned_only: bool = False   # True = 仅被提及，无实际出场（events 和 interactions 均为空）
 
 
 class CharacterRelation(BaseModel):
     """人物关系"""
-    target_name: str                 # 关系对象
-    relation_type: str               # friend/enemy/lover/family/mentor/rival
-    description: str                 # 关系描述
+    target_name: str                  # 关系对象
+    relation_type: str                # friend/enemy/lover/family/mentor/rival/complex
+    description: str                  # 关系描述（基于客观行为）
     evidence_chapters: list[int] = [] # 证据章节
+    # 新增：关系分析增强
+    objective_basis: str = ""         # 客观判断依据（具体行为/对话）
+    first_interaction_chapter: int = -1  # 首次互动章节
+    relation_evolution: str = ""      # 关系演变简述（如有变化）
+    confidence: str = "medium"        # 判断可信度：high/medium/low
 
 
 class CharacterSearchResult(BaseModel):
@@ -99,6 +123,11 @@ class DetailedCharacter(BaseModel):
     analysis_status: str = "pending"  # pending/searching/analyzing/completed/error
     analyzed_chapters: list[int] = [] # 已分析的章节
     error_message: str = ""
+
+    # 分析元数据（新增）
+    analysis_confidence: str = ""     # 整体分析可信度：high/medium/low
+    analysis_limitations: str = ""    # 分析局限性说明
+    discovered_characters: list[str] = []  # 分析过程中发现的关联人物（供后续分析）
 
 
 class Event(BaseModel):

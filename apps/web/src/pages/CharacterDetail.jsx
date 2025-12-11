@@ -19,6 +19,8 @@ const relationConfig = {
   enemy: { label: '敌人', icon: Swords, color: 'red' },
   mentor: { label: '导师', icon: GraduationCap, color: 'blue' },
   student: { label: '学生', icon: GraduationCap, color: 'cyan' },
+  partner: { label: '伙伴', icon: Users, color: 'indigo' },
+  complex: { label: '复杂', icon: Users, color: 'purple' },
 }
 
 export default function CharacterDetail() {
@@ -250,6 +252,22 @@ export default function CharacterDetail() {
                   </div>
                 </section>
               )}
+
+              {/* Discovered Characters */}
+              {result.discovered_characters?.length > 0 && (
+                <section className="cd-section cd-discovered">
+                  <h2 className="cd-section-title">
+                    <span className="cd-section-num">✦</span>
+                    关联人物
+                    <span className="cd-section-count">{result.discovered_characters.length} 人</span>
+                  </h2>
+                  <div className="cd-discovered-list">
+                    {result.discovered_characters.map((char, i) => (
+                      <span key={i} className="cd-discovered-tag">{char}</span>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
             {/* Right Column - Chapter Timeline */}
@@ -263,13 +281,16 @@ export default function CharacterDetail() {
 
                 <div className="cd-timeline">
                   {result.appearances?.map((app) => (
-                    <div key={app.chapter_index} className="cd-chapter">
+                    <div key={app.chapter_index} className={`cd-chapter ${app.is_mentioned_only ? 'mentioned-only' : ''}`}>
                       <button
                         className={`cd-chapter-btn ${expandedChapter === app.chapter_index ? 'expanded' : ''}`}
                         onClick={() => setExpandedChapter(expandedChapter === app.chapter_index ? null : app.chapter_index)}
                       >
                         <span className="cd-chapter-num">{app.chapter_index + 1}</span>
-                        <span className="cd-chapter-title">{app.chapter_title}</span>
+                        <span className="cd-chapter-title">
+                          {app.chapter_title}
+                          {app.is_mentioned_only && <span className="cd-mention-tag">仅提及</span>}
+                        </span>
                         <ChevronRight size={16} className="cd-chapter-icon" />
                       </button>
 
@@ -284,11 +305,30 @@ export default function CharacterDetail() {
                           {app.interactions?.length > 0 && (
                             <div className="cd-chapter-block">
                               <h5>人物互动</h5>
-                              <ul>{app.interactions.map((e, j) => <li key={j}>{e}</li>)}</ul>
+                              <ul>{app.interactions.map((int, j) => (
+                                <li key={j}>
+                                  {typeof int === 'string'
+                                    ? int
+                                    : <><strong>{int.character}</strong>：{int.description}</>
+                                  }
+                                </li>
+                              ))}</ul>
+                            </div>
+                          )}
+                          {app.key_moment && (
+                            <div className="cd-chapter-block cd-key-moment">
+                              <h5>关键时刻</h5>
+                              <p>{app.key_moment}</p>
                             </div>
                           )}
                           {app.quote && (
                             <blockquote className="cd-chapter-quote">「{app.quote}」</blockquote>
+                          )}
+                          {app.emotional_state && (
+                            <div className="cd-chapter-emotional">
+                              <span className="cd-emotional-label">情感状态</span>
+                              <span className="cd-emotional-value">{app.emotional_state}</span>
+                            </div>
                           )}
                         </div>
                       )}
