@@ -4,7 +4,7 @@
 
 **位置**: `apps/web/src/pages/`
 **框架**: React 18 + Vite
-**最后更新**: 2025-12-11
+**最后更新**: 2025-12-12
 
 ---
 
@@ -15,9 +15,11 @@
 | Dashboard | `Dashboard.jsx` | `/` | 首页，书籍管理 |
 | RAG Chat | `RAGChat.jsx` | `/chat` | 智能问答 |
 | Characters | `Characters.jsx` | `/characters` | 人物列表 |
-| Character Detail | `CharacterDetail.jsx` | `/characters/:name` | 人物详情（全屏） |
+| Character Detail V4 | `CharacterDetailV4.jsx` | `/characters/:name` | 人物详情（左侧目录+右侧内容） |
 | Timeline | `Timeline.jsx` | `/timeline` | 情节时间线 |
 | Chapter Analysis | `ChapterAnalysis.jsx` | `/chapters/:bookId` | 章节分析 |
+
+> **注**: `CharacterDetail.jsx` 为旧版本，保留作为参考。当前使用 V4 版本。
 
 ---
 
@@ -92,26 +94,58 @@ navigate(`/characters/${encodeURIComponent(name)}`)
 
 ---
 
-## CharacterDetail（人物详情）
+## CharacterDetail V4（人物详情）
 
-### 功能
-- 全屏独立布局（无侧边栏）
-- **纯展示模式**：只读取已有分析数据，不触发实时 AI 分析
-- 展示人物完整档案：
-  - 基础信息（名字、别名、首次出场、出场章数、覆盖率）
-  - 人物概述（Summary）
-  - 成长轨迹（Growth Arc）
-  - 性格剖析（Core Traits - 带证据）
-  - 优点 / 缺点
-  - 经典语录
-  - 人物关系（9种类型：friend/enemy/lover/family/mentor/student/rival/partner/complex）
-  - 关联人物（discovered_characters - 分析过程中发现的相关人物）
-  - 章节出现（可展开查看：事件、结构化互动、台词、关键时刻、情感状态）
-- 无数据时显示"暂无分析数据"提示
-- 浮动关闭按钮
+> **文件**: `CharacterDetailV4.jsx`（当前版本），`CharacterDetail.jsx`（旧版，备份参考）
+
+### V4 版本特点
+
+**布局重构**：左侧目录 + 右侧内容 Tab 切换
+```
+┌──────────────────┬──────────────────────────────────┐
+│  左侧边栏 280px  │       右侧内容区 (flex:1)         │
+│  ┌────────────┐  │  ┌────────────────────────────┐  │
+│  │ 返回按钮   │  │  │ 6 个内容区块（Tab 切换）    │  │
+│  │ 人物头像   │  │  │ 概览/成长/性格/关系/足迹    │  │
+│  │ 快捷统计   │  │  │ /关联人物                  │  │
+│  │ 目录导航   │  │  │                            │  │
+│  │ 书籍信息   │  │  │ 点击目录切换内容           │  │
+│  └────────────┘  │  └────────────────────────────┘  │
+└──────────────────┴──────────────────────────────────┘
+```
+
+### 6 大内容区块
+
+| 区块 | 组件 | 数据字段 |
+|------|------|---------|
+| 概览 | `OverviewSection` | summary, description, personality, notable_quotes |
+| 成长轨迹 | `GrowthSection` | growth_arc, growth_phases |
+| 性格分析 | `PersonalitySection` | core_traits, strengths, weaknesses |
+| 人物关系 | `RelationsSection` | relations（9种类型） |
+| 章节足迹 | `ChaptersSection` | appearances（可展开详情） |
+| 关联人物 | `ConnectionsSection` | discovered_characters |
+
+### 关系类型
+
+支持 9 种关系类型，每种有专属图标和颜色：
+
+| 类型 | 标签 | 图标 | 颜色 |
+|------|------|------|------|
+| lover | 恋人 | Heart | rose |
+| family | 亲人 | Users | amber |
+| friend | 挚友 | Users | emerald |
+| rival | 对手 | Swords | orange |
+| enemy | 敌人 | Swords | red |
+| mentor | 导师 | GraduationCap | blue |
+| student | 学生 | GraduationCap | cyan |
+| partner | 伙伴 | Handshake | indigo |
+| complex | 复杂 | Users | purple |
 
 ### 数据来源
-分析数据通过脚本离线生成，存储在：
+
+**纯展示模式**：只读取已有分析数据，不触发实时 AI 分析
+
+存储路径：
 ```
 data/analysis/{book_id}/characters/{人物名}/profile.json
 ```
@@ -123,33 +157,17 @@ python scripts/analyze.py 赵秦 --continue   # 增量分析
 python scripts/analyze.py 赵秦 --status     # 查看状态
 ```
 
-### URL 参数
-| 参数 | 类型 | 描述 |
-|------|------|------|
-| name | string | 人物名称（URL 编码） |
+### CSS 样式
 
-### 布局特点
-- 独立全屏布局，不使用主布局的侧边栏
-- Editorial 杂志风格设计
-- 编号式 Section Header（01、02、03...）
+- 样式前缀：`cv4-*`（约 770 行）
+- 位置：`apps/web/src/index.css`
+- 响应式：桌面双栏，移动端单栏
 
 ### 依赖
+
 - `useBookStore` - 获取 `currentBookId`
-- `useCharacterAnalysis` - 人物分析 Hook（只使用 `loadCached`）
-
-### 主要组件
-```jsx
-function CharacterDetail() {
-  // Loading 状态 - 加载缓存数据
-  // NoData 状态 - 暂无分析数据（提示运行脚本）
-  // Error 状态 - 加载失败提示
-  // Result 状态 - 完整人物档案展示
-}
-
-function SectionHeader({ number, title, subtitle }) {
-  // 编号式标题组件（01 成长轨迹 Growth Arc）
-}
-```
+- `useThemeStore` - 主题切换
+- `@tanstack/react-query` - 数据获取
 
 ---
 

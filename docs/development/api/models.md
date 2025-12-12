@@ -3,7 +3,7 @@
 > Pydantic 模型定义参考
 
 **位置**: `apps/api/src/knowledge/models.py`
-**最后更新**: 2025-12-11
+**最后更新**: 2025-12-12
 
 ---
 
