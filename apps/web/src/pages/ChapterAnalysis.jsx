@@ -43,8 +43,8 @@ export default function ChapterAnalysis() {
   const analyzeMutation = useMutation({
     mutationFn: (chapterIndex) => analysisApi.analyzeChapter(bookId, chapterIndex),
     onSuccess: () => {
-      queryClient.invalidateQueries(['analyses', bookId])
-      queryClient.invalidateQueries(['chapterAnalysis', bookId, selectedChapter])
+      queryClient.invalidateQueries({ queryKey: ['analyses', bookId] })
+      queryClient.invalidateQueries({ queryKey: ['chapterAnalysis', bookId, selectedChapter] })
     },
   })
 

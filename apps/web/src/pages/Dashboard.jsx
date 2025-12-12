@@ -21,7 +21,7 @@ export default function Dashboard() {
   const uploadMutation = useMutation({
     mutationFn: booksApi.upload,
     onSuccess: () => {
-      queryClient.invalidateQueries(['books'])
+      queryClient.invalidateQueries({ queryKey: ['books'] })
       setUploading(false)
     },
     onError: (err) => {
@@ -33,14 +33,14 @@ export default function Dashboard() {
   const deleteMutation = useMutation({
     mutationFn: booksApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries(['books'])
+      queryClient.invalidateQueries({ queryKey: ['books'] })
     },
   })
 
   const indexMutation = useMutation({
     mutationFn: (bookId) => ragApi.index(bookId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['books'])
+      queryClient.invalidateQueries({ queryKey: ['books'] })
     },
     onError: (err) => {
       alert('索引创建失败: ' + err.message)
