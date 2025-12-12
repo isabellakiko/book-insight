@@ -54,24 +54,13 @@
 
 **脚本**: `scripts/analyze.py`
 
+> 完整 CLI 参数请参考 [PROJECT.md](../ai-context/PROJECT.md#分析脚本)
+
 ```bash
-# 智能采样分析（新人物）
-python scripts/analyze.py 赵秦
-
-# 增量分析更多章节
-python scripts/analyze.py 赵秦 --continue --chapters 100
-
-# 查看人物分析状态
-python scripts/analyze.py 赵秦 --status
-
-# 批量分析多个人物
-python scripts/analyze.py 张成 赵秦 夏诗
+python scripts/analyze.py 赵秦              # 智能采样分析
+python scripts/analyze.py 赵秦 --continue   # 增量分析
+python scripts/analyze.py 赵秦 --status     # 查看状态
 ```
-
-**核心原则**：
-- 脚本只通过 HTTP 调用后端 API
-- 不直接访问文件系统
-- 所有业务逻辑在 API 层
 
 ---
 
