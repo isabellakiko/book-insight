@@ -1,6 +1,6 @@
 ---
 description: 恢复项目记忆，快速进入开发状态
-argument-hint: [--full | --web | --api | --core]
+argument-hint: [--full | --web | --api | --core | --rag]
 allowed-tools: Read, Bash(date)
 ---
 
@@ -23,8 +23,9 @@ echo "当前时间: $(date +%Y-%m-%d) $(date +%H:%M) (第 $(date +%V) 周)"
 | 无参数 | CONTEXT.md + CURRENT.md | 日常快速启动 |
 | `--full` | + 全部开发文档 | 首次或长时间未开发 |
 | `--web` | + pages.md + stores.md + hooks.md | 前端开发 |
-| `--api` | + routers.md + ai-tasks.md | 后端开发 |
-| `--core` | + ai-tasks.md + character-analysis.md | AI/RAG 核心开发 |
+| `--api` | + routers.md + ai-tasks.md + models.md | 后端开发 |
+| `--core` | + ai-tasks.md + character-analysis.md | 人物分析核心开发 |
+| `--rag` | + ai-tasks.md + data-storage.md | RAG 问答系统开发 |
 
 ## Step 2: 读取核心文档（必读）
 
@@ -54,9 +55,13 @@ echo "当前时间: $(date +%Y-%m-%d) $(date +%H:%M) (第 $(date +%V) 周)"
 - `docs/development/api/ai-tasks.md` - AI 任务模块
 - `docs/development/api/models.md` - 数据模型
 
-### --core 模式（AI 核心开发）
+### --core 模式（人物分析核心开发）
 - `docs/development/api/ai-tasks.md` - AI 任务模块
 - `docs/development/api/character-analysis.md` - 人物分析详细文档
+
+### --rag 模式（RAG 问答系统开发）
+- `docs/development/api/ai-tasks.md` - AI 任务模块（含 RAG 检索系统）
+- `docs/development/api/data-storage.md` - 数据存储格式（含向量库）
 
 ## Step 4: 验证理解并输出
 
