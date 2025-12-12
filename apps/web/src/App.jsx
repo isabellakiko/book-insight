@@ -6,7 +6,7 @@ import { clsx } from 'clsx'
 import Dashboard from './pages/Dashboard'
 import RAGChat from './pages/RAGChat'
 import Characters from './pages/Characters'
-import CharacterDetail from './pages/CharacterDetail'
+import CharacterDetailV4 from './pages/CharacterDetailV4'
 import Timeline from './pages/Timeline'
 import ChapterAnalysis from './pages/ChapterAnalysis'
 import ThemeSwitcher from './components/ThemeSwitcher'
@@ -91,7 +91,7 @@ export default function App() {
   if (isCharacterDetail) {
     return (
       <Routes>
-        <Route path="/characters/:name" element={<CharacterDetail />} />
+        <Route path="/characters/:name" element={<CharacterDetailV4 />} />
       </Routes>
     )
   }

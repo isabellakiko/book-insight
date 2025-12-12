@@ -22,7 +22,7 @@ class SSEEvent:
 class APIClient:
     """Book Insight API 客户端"""
 
-    def __init__(self, base_url: str = "http://localhost:8000"):
+    def __init__(self, base_url: str = "http://127.0.0.1:8000"):
         self.base_url = base_url.rstrip("/")
 
     # ===== 书籍 API =====
@@ -150,7 +150,7 @@ class APIClient:
     def check_health(self) -> bool:
         """检查 API 健康状态"""
         try:
-            self._get("/api/health")
+            self._get("/api/books")
             return True
         except Exception:
             return False
