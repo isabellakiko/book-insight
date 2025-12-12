@@ -54,8 +54,8 @@ export function useCharacterAnalysis(bookId) {
       })
 
       eventSource.addEventListener('chapter_error', (e) => {
-        const data = JSON.parse(e.data)
-        console.warn(`Chapter ${data.chapter_index} analysis failed:`, data.error)
+        // 章节分析失败时静默处理，SSE 流会继续
+        JSON.parse(e.data)
       })
 
       eventSource.addEventListener('relations_analyzed', (e) => {
@@ -107,8 +107,8 @@ export function useCharacterAnalysis(bookId) {
         }
         // No cache, need to analyze
         return false
-      } catch (err) {
-        console.warn('Failed to load cached character:', err)
+      } catch {
+        // 缓存加载失败是正常情况（首次分析）
         return false
       }
     },
