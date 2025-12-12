@@ -229,10 +229,10 @@ class CharacterOnDemandAnalyzer:
         interactions_summary = []
         for char, interactions in interactions_by_character.items():
             summary = f"\n【与 {char} 的互动】共 {len(interactions)} 次\n"
-            for i in interactions[:8]:  # 每人最多展示8次
+            for i in interactions[:15]:  # 每人最多展示15次
                 summary += f"  - 第{i['chapter']}章 [{i['type']}] {i['description']} ({i['sentiment']})\n"
-            if len(interactions) > 8:
-                summary += f"  - ... 还有 {len(interactions) - 8} 次互动\n"
+            if len(interactions) > 15:
+                summary += f"  - ... 还有 {len(interactions) - 15} 次互动\n"
             interactions_summary.append(summary)
 
         prompt = f"""{self.FIRST_PERSON_CONTEXT}
@@ -279,7 +279,7 @@ class CharacterOnDemandAnalyzer:
         )
 
         relations = []
-        for r in result.get("relations", [])[:15]:
+        for r in result.get("relations", [])[:20]:
             target = r.get("target_name", "")
             # 从原始数据中提取证据章节
             evidence = []
@@ -503,7 +503,7 @@ class CharacterOnDemandAnalyzer:
 
         # 解析 core_traits
         core_traits = []
-        for t in result.get("core_traits", [])[:8]:
+        for t in result.get("core_traits", [])[:15]:
             if isinstance(t, dict):
                 core_traits.append(CharacterTrait(
                     trait=t.get("trait", ""),
