@@ -306,11 +306,11 @@ BookManager.save_detailed_character(book_id, detailed_character)
 
 **Embedding 模型**：
 ```python
-# 阿里云百炼 text-embedding-v3
+# 使用 LLM_API_KEY 配置的服务（默认阿里云百炼 text-embedding-v3）
 embeddings = OpenAIEmbeddings(
-    model="text-embedding-v3",
-    openai_api_key=settings.dashscope_api_key,
-    openai_api_base=settings.dashscope_base_url,
+    model=settings.embedding_model,
+    openai_api_key=settings.llm_api_key,
+    openai_api_base=settings.llm_base_url,
 )
 ```
 

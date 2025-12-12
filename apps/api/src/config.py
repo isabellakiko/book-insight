@@ -7,9 +7,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings."""
 
-    # AI - 阿里云百炼
-    dashscope_api_key: str = ""
-    dashscope_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    # AI - LLM 配置（当前使用阿里云百炼）
+    llm_api_key: str = ""
+    llm_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     chat_model: str = "qwen-plus"
     embedding_model: str = "text-embedding-v3"
 

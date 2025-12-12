@@ -13,8 +13,8 @@ def get_client() -> OpenAI:
     global _client
     if _client is None:
         _client = OpenAI(
-            api_key=settings.dashscope_api_key,
-            base_url=settings.dashscope_base_url,
+            api_key=settings.llm_api_key,
+            base_url=settings.llm_base_url,
         )
     return _client
 

@@ -40,7 +40,7 @@ pnpm setup
 
 ```bash
 cp apps/api/.env.example apps/api/.env
-# 编辑 .env 填入 DASHSCOPE_API_KEY
+# 编辑 .env 填入 LLM_API_KEY（支持阿里云百炼、火山引擎等）
 ```
 
 ### 3. 启动开发服务器
@@ -122,7 +122,13 @@ book-insight/
 
 | 变量 | 必需 | 说明 |
 |------|------|------|
-| `DASHSCOPE_API_KEY` | 是 | 阿里云百炼 API 密钥 |
-| `DASHSCOPE_BASE_URL` | 否 | 默认 https://dashscope.aliyuncs.com/compatible-mode/v1 |
-| `CHAT_MODEL` | 否 | 默认 qwen-plus |
-| `EMBEDDING_MODEL` | 否 | 默认 text-embedding-v3 |
+| `LLM_API_KEY` | 是 | LLM 服务 API 密钥 |
+| `LLM_BASE_URL` | 否 | OpenAI 兼容接口地址 |
+| `CHAT_MODEL` | 否 | 对话模型名称 |
+| `EMBEDDING_MODEL` | 否 | 向量模型名称 |
+
+**支持的 LLM 服务**（OpenAI 兼容接口）：
+- 阿里云百炼：qwen-plus + text-embedding-v3
+- 火山引擎：doubao-pro-32k + doubao-embedding
+- OpenAI：gpt-4o + text-embedding-3-small
+- DeepSeek：deepseek-chat

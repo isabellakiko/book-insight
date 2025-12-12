@@ -40,8 +40,8 @@ class VectorStore:
         # Initialize embeddings - 使用阿里云百炼
         self.embeddings = OpenAIEmbeddings(
             model=settings.embedding_model,
-            openai_api_key=settings.dashscope_api_key,
-            openai_api_base=settings.dashscope_base_url,
+            openai_api_key=settings.llm_api_key,
+            openai_api_base=settings.llm_base_url,
         )
 
     def is_indexed(self) -> bool:

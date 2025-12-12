@@ -40,9 +40,9 @@ data = await chat_json(prompt="问题", system="系统提示")
 ```
 
 ### 配置
-- 环境变量: `DASHSCOPE_API_KEY`
-- Base URL: `https://dashscope.aliyuncs.com/compatible-mode/v1`
-- 模型: `qwen-plus`（可通过 `CHAT_MODEL` 环境变量配置）
+- 环境变量: `LLM_API_KEY`（支持阿里云百炼、火山引擎、OpenAI 等）
+- Base URL: `LLM_BASE_URL`（默认阿里云百炼）
+- 模型: `CHAT_MODEL`（默认 qwen-plus）
 - 默认参数:
   - max_tokens: 4096
   - temperature: 0.3（JSON 模式）/ 0.7（普通对话）
