@@ -36,7 +36,7 @@ class CharacterSearchRequest(BaseModel):
 class CharacterAnalyzeRequest(BaseModel):
     """Request to analyze character."""
     name: str
-    max_chapters: int = 30
+    max_chapters: int = 100
 
 
 # ===== 章节分析端点 =====

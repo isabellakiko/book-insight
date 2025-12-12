@@ -170,7 +170,7 @@ class CharacterOnDemandAnalyzer:
 
         # 解析 interactions
         interactions = []
-        for i in result.get("interactions", [])[:5]:
+        for i in result.get("interactions", [])[:8]:
             if isinstance(i, dict):
                 interactions.append(CharacterInteraction(
                     character=i.get("character", ""),
@@ -190,7 +190,7 @@ class CharacterOnDemandAnalyzer:
         return CharacterAppearance(
             chapter_index=chapter_index,
             chapter_title=chapter_title,
-            events=result.get("events", [])[:5],
+            events=result.get("events", [])[:8],
             interactions=interactions,
             quote=result.get("quote", ""),
             narrator_bias=result.get("narrator_bias", ""),
@@ -229,17 +229,17 @@ class CharacterOnDemandAnalyzer:
         interactions_summary = []
         for char, interactions in interactions_by_character.items():
             summary = f"\n【与 {char} 的互动】共 {len(interactions)} 次\n"
-            for i in interactions[:5]:  # 每人最多展示5次
+            for i in interactions[:8]:  # 每人最多展示8次
                 summary += f"  - 第{i['chapter']}章 [{i['type']}] {i['description']} ({i['sentiment']})\n"
-            if len(interactions) > 5:
-                summary += f"  - ... 还有 {len(interactions) - 5} 次互动\n"
+            if len(interactions) > 8:
+                summary += f"  - ... 还有 {len(interactions) - 8} 次互动\n"
             interactions_summary.append(summary)
 
         prompt = f"""{self.FIRST_PERSON_CONTEXT}
 
 基于以下结构化互动记录，深度分析人物"{character_name}"的人物关系网络：
 
-{''.join(interactions_summary[:10])}
+{''.join(interactions_summary[:15])}
 
 请以 JSON 格式返回：
 {{
@@ -279,12 +279,12 @@ class CharacterOnDemandAnalyzer:
         )
 
         relations = []
-        for r in result.get("relations", [])[:8]:
+        for r in result.get("relations", [])[:15]:
             target = r.get("target_name", "")
             # 从原始数据中提取证据章节
             evidence = []
             if target in interactions_by_character:
-                evidence = [i["chapter"] for i in interactions_by_character[target][:10]]
+                evidence = [i["chapter"] for i in interactions_by_character[target][:20]]
 
             relations.append(CharacterRelation(
                 target_name=target,
@@ -344,16 +344,16 @@ class CharacterOnDemandAnalyzer:
 基于以下丰富信息，深度分析人物"{character_name}"的性格特点：
 
 ## 主要事件（客观行为）
-{chr(10).join(events_summary[:25])}
+{chr(10).join(events_summary[:50])}
 
 ## 代表性台词（原话）
-{chr(10).join(quotes[:8]) if quotes else "（暂无记录）"}
+{chr(10).join(quotes[:15]) if quotes else "（暂无记录）"}
 
 ## 情感状态变化
-{chr(10).join(emotional_states[:15]) if emotional_states else "（暂无记录）"}
+{chr(10).join(emotional_states[:25]) if emotional_states else "（暂无记录）"}
 
 ## 关键时刻
-{chr(10).join(key_moments[:10]) if key_moments else "（暂无记录）"}
+{chr(10).join(key_moments[:15]) if key_moments else "（暂无记录）"}
 
 ## 叙述者偏见分析
 {bias_summary if bias_summary else "（暂无数据）"}
@@ -454,16 +454,16 @@ class CharacterOnDemandAnalyzer:
 {relations_text if relations_text else '暂无关系数据'}
 
 ## 主要事件轨迹
-{chr(10).join(all_events[:35])}
+{chr(10).join(all_events[:60])}
 
 ## 情感历程
-{chr(10).join(emotional_journey[:20]) if emotional_journey else '（数据不足）'}
+{chr(10).join(emotional_journey[:30]) if emotional_journey else '（数据不足）'}
 
 ## 关键时刻集锦
-{chr(10).join(key_moments[:15]) if key_moments else '（数据不足）'}
+{chr(10).join(key_moments[:25]) if key_moments else '（数据不足）'}
 
 ## 代表性台词
-{chr(10).join(all_quotes[:12]) if all_quotes else '（暂无台词）'}
+{chr(10).join(all_quotes[:20]) if all_quotes else '（暂无台词）'}
 
 请以 JSON 格式返回**完整深度分析**：
 {{
@@ -503,7 +503,7 @@ class CharacterOnDemandAnalyzer:
 
         # 解析 core_traits
         core_traits = []
-        for t in result.get("core_traits", [])[:5]:
+        for t in result.get("core_traits", [])[:8]:
             if isinstance(t, dict):
                 core_traits.append(CharacterTrait(
                     trait=t.get("trait", ""),
@@ -515,9 +515,9 @@ class CharacterOnDemandAnalyzer:
             "summary": result.get("summary", ""),
             "growth_arc": result.get("growth_arc", ""),
             "core_traits": core_traits,
-            "strengths": result.get("strengths", [])[:5],
-            "weaknesses": result.get("weaknesses", [])[:5],
-            "notable_quotes": result.get("notable_quotes", [])[:5],
+            "strengths": result.get("strengths", [])[:8],
+            "weaknesses": result.get("weaknesses", [])[:8],
+            "notable_quotes": result.get("notable_quotes", [])[:15],
             # 新增：分析元数据
             "analysis_confidence": result.get("analysis_confidence", ""),
             "analysis_limitations": result.get("analysis_limitations", ""),
@@ -528,7 +528,7 @@ class CharacterOnDemandAnalyzer:
         self,
         book: Book,
         character_name: str,
-        max_chapters: int = 30,
+        max_chapters: int = 100,
     ) -> DetailedCharacter:
         """完整分析流程"""
         # 1. 搜索
@@ -615,7 +615,7 @@ class CharacterOnDemandAnalyzer:
         self,
         book: Book,
         character_name: str,
-        max_chapters: int = 30,
+        max_chapters: int = 100,
     ) -> AsyncGenerator[dict, None]:
         """流式分析，逐步产出结果"""
         # 1. 搜索
