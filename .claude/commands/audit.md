@@ -34,7 +34,7 @@ git log -3 --oneline
 ```bash
 echo "=== 代码统计 ==="
 echo "后端 Python: $(find apps/api/src -name '*.py' | wc -l) 个文件"
-echo "前端 JSX: $(find apps/web/src -name '*.jsx' -o -name '*.js' | wc -l) 个文件"
+echo "前端 JSX: $(find apps/web/src \( -name '*.jsx' -o -name '*.js' \) | wc -l) 个文件"
 echo "文档: $(find docs -name '*.md' | wc -l) 个文件"
 ```
 

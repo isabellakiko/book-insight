@@ -11,6 +11,21 @@ import chardet
 
 from ..config import settings
 from ..knowledge.models import Chapter, ChapterAnalysis, Character, DetailedCharacter
+from ..utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+def _safe_load_json(file_path: Path, encoding: str = "utf-8") -> Optional[dict]:
+    """Safely load JSON file with error handling."""
+    try:
+        return json.loads(file_path.read_text(encoding=encoding))
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parse error in {file_path}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to read {file_path}: {e}")
+        return None
 
 
 @dataclass
@@ -227,8 +242,12 @@ class BookManager:
 
         analyses = []
         for file_path in sorted(analysis_dir.glob("*.json")):
-            data = json.loads(file_path.read_text())
-            analyses.append(ChapterAnalysis(**data))
+            data = _safe_load_json(file_path)
+            if data:
+                try:
+                    analyses.append(ChapterAnalysis(**data))
+                except Exception as e:
+                    logger.warning(f"Invalid chapter analysis in {file_path}: {e}")
 
         return analyses
 
@@ -239,8 +258,14 @@ class BookManager:
         if not file_path.exists():
             return None
 
-        data = json.loads(file_path.read_text())
-        return ChapterAnalysis(**data)
+        data = _safe_load_json(file_path)
+        if not data:
+            return None
+        try:
+            return ChapterAnalysis(**data)
+        except Exception as e:
+            logger.warning(f"Invalid chapter analysis in {file_path}: {e}")
+            return None
 
     @classmethod
     def save_chapter_analysis(cls, book_id: str, analysis: ChapterAnalysis) -> None:
@@ -258,8 +283,17 @@ class BookManager:
         if not file_path.exists():
             return []
 
-        data = json.loads(file_path.read_text())
-        return [Character(**c) for c in data]
+        data = _safe_load_json(file_path)
+        if not data:
+            return []
+
+        characters = []
+        for c in data:
+            try:
+                characters.append(Character(**c))
+            except Exception as e:
+                logger.warning(f"Invalid character data: {e}")
+        return characters
 
     @classmethod
     def save_characters(cls, book_id: str, characters: list[Character]) -> None:
@@ -337,13 +371,19 @@ class BookManager:
         if not profile_path.exists():
             return None
 
-        data = json.loads(profile_path.read_text(encoding="utf-8"))
+        data = _safe_load_json(profile_path)
+        if not data:
+            return None
 
         # 确保 analysis_status 字段存在
         if "analysis_status" not in data:
             data["analysis_status"] = "completed"
 
-        return DetailedCharacter(**data)
+        try:
+            return DetailedCharacter(**data)
+        except Exception as e:
+            logger.warning(f"Invalid detailed character in {profile_path}: {e}")
+            return None
 
     @classmethod
     def get_detailed_characters(cls, book_id: str) -> list[DetailedCharacter]:
@@ -358,10 +398,15 @@ class BookManager:
             if char_dir.is_dir():
                 profile_path = char_dir / "profile.json"
                 if profile_path.exists():
-                    data = json.loads(profile_path.read_text(encoding="utf-8"))
+                    data = _safe_load_json(profile_path)
+                    if not data:
+                        continue
                     if "analysis_status" not in data:
                         data["analysis_status"] = "completed"
-                    characters.append(DetailedCharacter(**data))
+                    try:
+                        characters.append(DetailedCharacter(**data))
+                    except Exception as e:
+                        logger.warning(f"Invalid detailed character in {profile_path}: {e}")
 
         return characters
 
@@ -410,7 +455,7 @@ class BookManager:
         file_path = settings.books_dir / book_id / "chapters" / f"{chapter_index + 1:04d}.json"
         if not file_path.exists():
             return None
-        return json.loads(file_path.read_text(encoding="utf-8"))
+        return _safe_load_json(file_path)
 
     @classmethod
     def has_chapter_files(cls, book_id: str) -> bool:

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { analysisApi } from '../services/api'
 
 /**
@@ -12,6 +12,16 @@ export function useCharacterAnalysis(bookId) {
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const eventSourceRef = useRef(null)
+
+  // Cleanup EventSource on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+        eventSourceRef.current = null
+      }
+    }
+  }, [])
 
   const reset = useCallback(() => {
     setStatus('idle')

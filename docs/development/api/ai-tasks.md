@@ -163,21 +163,42 @@ async for event in analyzer.analyze_stream(book, character_name):
 
 ### Prompt 模板
 
-#### 章节出现分析
+#### 章节出现分析（V2 增强版）
 ```
-分析人物 "{name}" 在以下章节中的表现：
+[FIRST_PERSON_CONTEXT: 本书以张成第一人称视角叙述...]
 
-章节标题：{title}
-章节内容：
-{content}
+分析人物"{name}"在以下章节中的**完整表现**，同时记录所有与其相关的人物信息。
+
+章节：{title}
+内容：{content}
 
 返回 JSON 格式：
 {
-    "events": ["该人物在本章的主要事件，最多3个"],
-    "interactions": ["与其他角色的互动，最多3个"],
-    "quote": "代表性台词或描述（可为空）"
+    "events": ["该人物参与的具体事件（最多5个）"],
+    "interactions": [
+        {
+            "character": "互动对象姓名",
+            "type": "dialogue/conflict/cooperation/support/observation",
+            "description": "具体互动内容",
+            "sentiment": "positive/neutral/negative",
+            "initiated_by": "target/other/mutual"
+        }
+    ],
+    "quote": "该人物最能体现性格的原话",
+    "narrator_bias": "positive/neutral/negative/unclear",
+    "emotional_state": "愤怒/紧张/喜悦/平静等",
+    "chapter_significance": "low/medium/high",
+    "mentioned_characters": ["所有相关人物姓名"],
+    "key_moment": "本章关键时刻描述"
 }
 ```
+
+**V2 新增字段说明**：
+- `narrator_bias`: 第一人称叙述者对该人物的态度倾向
+- `emotional_state`: 人物在本章的主要情感状态
+- `chapter_significance`: 本章对人物发展的重要性
+- `mentioned_characters`: 与该人物有关联的所有人物（含间接提及）
+- `key_moment`: 最能体现人物的关键时刻
 
 #### 关系分析
 ```
