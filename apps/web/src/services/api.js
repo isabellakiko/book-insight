@@ -34,7 +34,7 @@ export const analysisApi = {
   // 人物按需分析
   searchCharacter: (bookId, name) =>
     api.post(`/analysis/${bookId}/characters/search`, { name }).then((r) => r.data),
-  analyzeCharacter: (bookId, name, maxChapters = 30) =>
+  analyzeCharacter: (bookId, name, maxChapters = 100) =>
     api.post(`/analysis/${bookId}/characters/analyze`, { name, max_chapters: maxChapters }).then((r) => r.data),
   getCharacterStreamUrl: (bookId, name) =>
     `/api/analysis/${bookId}/characters/stream?name=${encodeURIComponent(name)}`,

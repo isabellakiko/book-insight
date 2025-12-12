@@ -84,7 +84,7 @@ export default function CharacterDetail() {
               <div className="cd-progress-bar">
                 <div className="cd-progress-fill" style={{ width: `${progress}%` }} />
               </div>
-              <p>已分析 {appearances.length} / {Math.min(searchResult.found_in_chapters.length, 30)} 章</p>
+              <p>已分析 {appearances.length} / {Math.min(searchResult.found_in_chapters.length, 100)} 章</p>
             </div>
           )}
           {status === 'searching' && <Loader2 size={24} className="animate-spin" />}

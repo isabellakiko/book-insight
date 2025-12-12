@@ -313,8 +313,8 @@ class CharacterOnDemandAnalyzer:
         narrator_biases = []
 
         for app in appearances:
-            # 事件
-            for event in app.events[:2]:
+            # 事件 - 每章取前4个重要事件
+            for event in app.events[:4]:
                 events_summary.append(f"第{app.chapter_index + 1}章: {event}")
             # 台词
             if app.quote:

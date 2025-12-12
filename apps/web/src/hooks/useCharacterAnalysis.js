@@ -115,10 +115,10 @@ export function useCharacterAnalysis(bookId) {
     [bookId, reset]
   )
 
-  // Calculate progress
+  // Calculate progress - 使用实际分析的章节数计算
   const progress =
     searchResult && searchResult.found_in_chapters.length > 0
-      ? Math.round((appearances.length / Math.min(searchResult.found_in_chapters.length, 30)) * 100)
+      ? Math.round((appearances.length / Math.min(searchResult.found_in_chapters.length, 100)) * 100)
       : 0
 
   return {
